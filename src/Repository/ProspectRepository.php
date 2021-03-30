@@ -37,6 +37,14 @@ class ProspectRepository extends ServiceEntityRepository
         $this->manager->persist($newProspect);
         $this->manager->flush();
     }
+    public function updateProspect(Prospect $prospect): Prospect
+    {
+        $this->manager->persist($prospect);
+        $prospect->setUpdatedAt(new DateTime('NOW'));
+        $this->manager->flush();
+
+        return $prospect;
+    }
 
     // /**
     //  * @return Prospect[] Returns an array of Prospect objects

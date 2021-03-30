@@ -18,7 +18,7 @@ class Prospect
     private $id;
 
     /**
-     * @ORM\Column(type="string", length=255)
+     * @ORM\Column(type="string", length=255, unique=true)
      */
     private $mail;
 
@@ -51,6 +51,11 @@ class Prospect
      * @ORM\Column(type="boolean")
      */
     private $disabled;
+
+    /**
+     * @ORM\Column(type="datetime", nullable=true)
+     */
+    private $updated_at;
 
     public function getId(): ?int
     {
@@ -139,5 +144,31 @@ class Prospect
         $this->disabled = $disabled;
 
         return $this;
+    }
+
+    public function getUpdatedAt(): ?\DateTimeInterface
+    {
+        return $this->updated_at;
+    }
+
+    public function setUpdatedAt(\DateTimeInterface $updated_at): self
+    {
+        $this->updated_at = $updated_at;
+
+        return $this;
+    }
+    public function toArray()
+    {
+        return [
+            'id' => $this->getId(),
+            'mail' => $this->getMail(),
+            'nom' => $this->getNom(),
+            'rgpd' => $this->getRgpd(),
+            'description' => $this->getDescription(),
+            'status' => $this->getStatus(),
+            'createdAt' => $this->getCreatedAt(),
+            'updatedAt' => $this->getUpdatedAt(),
+            'disabled' => $this->getDisabled()
+        ];
     }
 }

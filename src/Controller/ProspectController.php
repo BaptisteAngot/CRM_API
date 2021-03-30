@@ -47,6 +47,69 @@ class ProspectController extends AbstractController
 
         return new JsonResponse(['status' => 'Prospect created!'], Response::HTTP_CREATED);
     }
+    /**
+     * @Route("/tous", name="get_all_prospect", methods={"GET"})
+     */
+    public function getAllProspect(): JsonResponse
+    {
+        $prospects = $this->prospectRepository->findAll();
 
+        $data = [];
+        foreach ($prospects as $prospect){
+            $data[] = [
+                'id' => $prospect->getId(),
+                'mail' => $prospect->getMail(),
+                'nom' => $prospect->getNom(),
+                'rgpd' => $prospect->getRgpd(),
+                'description' => $prospect->getDescription(),
+                'created_at' => $prospect->getCreatedAt(),
+                'updated_at' => $prospect->getUpdatedAt(),
+                'status' => $prospect->getStatus(),
+                'disabled' => $prospect->getDisabled()
+            ];
+        }
 
+        return new JsonResponse($data, Response::HTTP_OK);
+    }
+
+    /**
+     * @Route("/{id}", name="get_one_prospect", methods={"GET"})
+     */
+    public function getProspectID($id): JsonResponse
+    {
+        $prospect = $this->prospectRepository->findOneBy(['id' => $id]);
+
+        $data = [
+            'id' => $prospect->getId(),
+            'mail' => $prospect->getMail(),
+            'nom' => $prospect->getNom(),
+            'rgpd' => $prospect->getRgpd(),
+            'description' => $prospect->getDescription(),
+            'created_at' => $prospect->getCreatedAt(),
+            'status' => $prospect->getStatus(),
+            'disabled' => $prospect->getDisabled()
+        ];
+
+        return new JsonResponse($data, Response::HTTP_OK);
+    }
+
+    /**
+     * @Route("/edite/{id}", name="update_prospect", methods={"PUT"})
+     */
+    public function update($id, Request $request): JsonResponse
+    {
+        $prospect = $this->prospectRepository->findOneBy(['id' => $id]);
+        $data = json_decode($request->getContent(), true);
+
+        empty($data['mail']) ? true : $prospect->setMail($data['mail']);
+        empty($data['nom']) ? true : $prospect->setNom($data['nom']);
+        empty($data['rgpd']) ? true : $prospect->setRgpd($data['rgpd']);
+        empty($data['description']) ? true : $prospect->setdescription($data['description']);
+        empty($data['status']) ? true : $prospect->setStatus($data['phoneNumber']);
+        empty($data['disabled']) ? true : $prospect->setDisabled($data['phoneNumber']);
+
+        $updatedProspect = $this->prospectRepository->updateProspect($prospect);
+
+        return new JsonResponse($updatedProspect->toArray(), Response::HTTP_OK);
+    }
 }
