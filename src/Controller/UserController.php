@@ -5,6 +5,10 @@ namespace App\Controller;
 use App\Entity\User;
 use App\Repository\UserRepository;
 use JMS\Serializer\SerializerInterface;
+use Symfony\Component\Serializer\Serializer;
+use Symfony\Component\Serializer\Encoder\JsonEncoder;
+use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
+use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -59,7 +63,17 @@ class UserController extends AbstractController
     private function serializeUser($objet, SerializerInterface $serializer, $groupe="user") {
         return $serializer->serialize($objet,"json", SerializationContext::create()->setGroups(array($groupe)));
     }
-
+    protected function serializeJson($objet)
+    {
+        $defaultContext = [
+            AbstractNormalizer::CIRCULAR_REFERENCE_HANDLER => function ($object, $format, $context) {
+                return $object->getNom();
+            },
+        ];
+        $normalizer = new ObjectNormalizer(null, null, null, null, null, null, $defaultContext);
+        $serializer = new Serializer([$normalizer], [new JsonEncoder()]);
+        return $serializer->serialize($objet, 'json');
+    }
     /**
      * @Route("/create", name="create_user", methods={"POST"})
      * @param UserPasswordEncoderInterface $passwordEncoder
@@ -82,7 +96,7 @@ class UserController extends AbstractController
         $telephone = $data['telephone'];
         $fonction = $data["fonction"];
 
-        if (empty($email)||empty($password)|| empty($lastName) ||empty($firstName) || empty($telephone) || empty($fonction) || $jwtController->checkIfAdmin($headerAuthorization) == false ) {
+        if (empty($email) || empty($roles) || empty($password)|| empty($lastName) || empty($firstName) || empty($telephone) || empty($fonction) || $jwtController->checkIfAdmin($headerAuthorization) == false ) {
             throw new NotFoundHttpException('Expecting mandatory parameters!');
         } else {
             $this->userRepository->saveUser($email, $roles, $password, $lastName, $firstName, $telephone, $fonction);
@@ -97,60 +111,40 @@ class UserController extends AbstractController
      */
     public function updateUser($id, Request $request,UserRepository $userRepository): JsonResponse
     {
-        $users = $this->userRepository->findOneBy(['id' => $id]);
-        $data = json_decode($request->getContent(), true);
 
-        empty($datas["email"]) ? true : $users->setEmail($data['email']);
-        empty($datas["roles"]) ? true : $users->setRoles($data['roles']);
-        empty($datas["password"]) ? true : $users->setPassword($data['password']);
-        empty($data["lastName"]) ? true : $users->setLastName($data['lastName']);
-        empty($data["firstName"]) ? true : $users->setFirstName($data['firstName']);
-        empty($data["telephone"]) ? true : $users->setTelephone($data['telephone']);
-        empty($data["fonction"]) ? true : $users->setFonction($data['fonction']);
+        $entityManager = $this->getDoctrine()->getManager();
+        $data = json_decode($request->getContent(),true);
+        $user = $userRepository->findOneBy(['id' => $id]);
+        isset($data["email"]) && $user->setEmail($data['email']);
+        isset($data["roles"]) && $user->setRoles($data['roles']);
+        isset($data["password"]) && $user->setPassword($data['password']);
+        isset($data["lastName"]) && $user->setLastName($data['lastName']);
+        isset($data["firstName"]) && $user->setFirstName($data['firstName']);
+        isset($data["telephone"]) && $user->setTelephone($data['telephone']);
+        isset($data["fonction"]) && $user->setFonction($data['fonction']);
 
-        $updatedUser = $this->userRepository->updateUser($users);
-
-        return new JsonResponse($updatedUser->toArray(), Response::HTTP_OK);
+        $updatedUser = $this->userRepository->updateUser($user);
+        return JsonResponse::fromJsonString($this->serializeJson($user));
+     
     }
-    // /**
-    //  * @Route("/update", name="user_update", methods={"PATCH"})
-    //  * @param Request $request
-    //  * @param UserRepository $userRepository
-    //  * @return Response
-    //  */
-    // public function updateUsers(Request $request, UserRepository $userRepository)
-    // {
-    //     $entityManager = $this->getDoctrine()->getManager();
-    //     $response = new Response();
-    //     $datas = json_decode(
-    //         $request->getContent(),
-    //         true
-    //     );
-    
-    //     if (isset($datas["user_id"]) && isset($datas["email"])) {
-    //         $id = $datas["user_id"];
-    //         $user = $userRepository->find($id);
-    //         if ($user === null) {
-    //             $response->setContent("Ce user n'existe pas");
-    //             $response->setStatusCode(Response::HTTP_BAD_REQUEST);
-    //         } else {
-    //             $user->setEmail($datas["email"])
-    //             ->setRoles($datas["roles"])
-    //             ->setPassword($datas["password"])
-    //             ->setLastName($datas["lastName"])
-    //             ->setFirstName($datas["firstName"])
-    //             ->setTelephone($datas["telephone"])
-    //             ->setFonction($datas["fonction"]);
-    //             $entityManager->persist($user);
-    //             $entityManager->flush();
-    //             $response->setStatusCode(Response::HTTP_OK);
-    //             $response->setContent("Modification of user " . $id);
-    //         }
-    //     } else {
-    //         $response->setStatusCode(Response::HTTP_BAD_REQUEST);
-    //     }
-    //     return $response;
-    // }
+   /**
+     * @Route("/getAll", name="get_AllUsers", methods={"GET"})
+     * @param UserRepository $userRepository
+     * @param Request $request
+     * @return Response
+     */
+    public function userJson(UserRepository $userRepository, Request $request)
+    {
+        $filter = [];
+        $em = $this->getDoctrine()->getManager();
+        $metadata = $em->getClassMetadata(User::class)->getFieldNames();
+        foreach ($metadata as $value) {
+            if ($request->query->get($value)) {
+                $filter[$value] = $request->query->get($value);
+            }
+        }
+        return JsonResponse::fromJsonString($this->serializeJson($userRepository->findBy($filter)));
+    }
 
         /**
      * @Route("/delete", name="delete_user", methods={"DELETE"})
