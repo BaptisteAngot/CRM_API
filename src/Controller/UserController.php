@@ -68,7 +68,11 @@ class UserController extends AbstractController
      */
     public function createUser(UserPasswordEncoderInterface $passwordEncoder,UserRepository $userRepository, Request $request): JsonResponse
     {
-    
+        $jwtController = new JWTController();
+        $headerAuthorization = $request->headers->get("authorization");
+        $mail = $jwtController->getUsername($headerAuthorization);
+
+        
         $data = json_decode($request->getContent(), true);
         $email = $data['email'];
         $roles = $data['roles'];
@@ -78,36 +82,36 @@ class UserController extends AbstractController
         $telephone = $data['telephone'];
         $fonction = $data["fonction"];
 
-        if (empty($email)||empty($password)|| empty($lastName) ||empty($firstName) || empty($telephone) || empty($fonction)) {
+        if (empty($email)||empty($password)|| empty($lastName) ||empty($firstName) || empty($telephone) || empty($fonction) || $jwtController->checkIfAdmin($headerAuthorization) == false ) {
             throw new NotFoundHttpException('Expecting mandatory parameters!');
-        }
-
-        $this->userRepository->saveUser($email, $roles, $password, $lastName, $firstName, $telephone, $fonction);
-
-        return new JsonResponse(['status' => 'Customer created!'], Response::HTTP_CREATED);
+        } else {
+            $this->userRepository->saveUser($email, $roles, $password, $lastName, $firstName, $telephone, $fonction);
+            return new JsonResponse(['status' => 'Customer created!'], Response::HTTP_CREATED);
+        } 
 
     }
 
-    //  /**
-    //  * @Route("/update/{id}", name="update_user", methods={"PUT"})
-    //  */
-    // public function updateUser($id, Request $request): JsonResponse
-    // {
-    //     $user = $this->customerRepository->findOneBy(['id' => $id]);
-    //     $data = json_decode($request->getContent(), true);
+     /**
+     * @Route("/update/{id}", name="update_user", methods={"PUT"})
+     * @param UserRepository $userRepository
+     */
+    public function updateUser($id, Request $request,UserRepository $userRepository): JsonResponse
+    {
+        $users = $this->userRepository->findOneBy(['id' => $id]);
+        $data = json_decode($request->getContent(), true);
 
-    //     empty($datas["email"]) ? true : $customer->setFirstName($data['firstName']);
-    //     empty($datas["roles"]) ? true : $customer->setLastName($data['lastName']);
-    //     empty($datas["password"]) ? true : $customer->setEmail($data['email']);
-    //     empty($data['phoneNumber']) ? true : $customer->setPhoneNumber($data['phoneNumber']);
-    //     empty($data['phoneNumber']) ? true : $customer->setPhoneNumber($data['phoneNumber']);
-    //     empty($data['phoneNumber']) ? true : $customer->setPhoneNumber($data['phoneNumber']);
-    //     empty($data['phoneNumber']) ? true : $customer->setPhoneNumber($data['phoneNumber']);
+        empty($datas["email"]) ? true : $users->setEmail($data['email']);
+        empty($datas["roles"]) ? true : $users->setRoles($data['roles']);
+        empty($datas["password"]) ? true : $users->setPassword($data['password']);
+        empty($data["lastName"]) ? true : $users->setLastName($data['lastName']);
+        empty($data["firstName"]) ? true : $users->setFirstName($data['firstName']);
+        empty($data["telephone"]) ? true : $users->setTelephone($data['telephone']);
+        empty($data["fonction"]) ? true : $users->setFonction($data['fonction']);
 
-    //     $updatedCostumer = $this->customerRepository->updateCustomer($customer);
+        $updatedUser = $this->userRepository->updateUser($users);
 
-    //     return new JsonResponse($updatedCostumer->toArray(), Response::HTTP_OK);
-    // }
+        return new JsonResponse($updatedUser->toArray(), Response::HTTP_OK);
+    }
     // /**
     //  * @Route("/update", name="user_update", methods={"PATCH"})
     //  * @param Request $request
