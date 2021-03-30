@@ -8,7 +8,7 @@ use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
 use Symfony\Component\Security\Core\User\PasswordUpgraderInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
-
+use Doctrine\ORM\EntityManagerInterface;
 /**
  * @method User|null find($id, $lockMode = null, $lockVersion = null)
  * @method User|null findOneBy(array $criteria, array $orderBy = null)
@@ -17,9 +17,10 @@ use Symfony\Component\Security\Core\User\UserInterface;
  */
 class UserRepository extends ServiceEntityRepository implements PasswordUpgraderInterface
 {
-    public function __construct(ManagerRegistry $registry)
+    public function __construct(ManagerRegistry $registry, EntityManagerInterface $manager)
     {
         parent::__construct($registry, User::class);
+        $this->manager = $manager;
     }
 
     /**
@@ -36,6 +37,21 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         $this->_em->flush();
     }
 
+    public function saveUser($email, $roles, $password, $lastName, $firstName, $telephone, $fonction)
+    {
+        $newUser = new User();
+        $newUser
+                ->setEmail($email)
+                ->setRoles($roles)
+                ->setPassword($password)
+                ->setLastName($lastName)
+                ->setFirstName($firstName)
+                ->setTelephone($telephone)
+                ->setFonction($fonction);
+
+        $this->manager->persist($newUser);
+        $this->manager->flush();
+    }
     // /**
     //  * @return User[] Returns an array of User objects
     //  */

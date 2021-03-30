@@ -74,7 +74,7 @@ class User implements UserInterface
     private $created_at;
 
     /**
-     * @ORM\Column(type="datetime")
+     * @ORM\Column(type="datetime", nullable=true)
      * @Serializer\Groups({"user"})
      */
     private $updated_at;
@@ -83,6 +83,13 @@ class User implements UserInterface
      * @ORM\Column(type="boolean")
      */
     private $rgpd;
+
+    public function __construct()
+    {
+        $this->disabled = false;
+        $this->rgpd = false;
+        $this->created_at = new \DateTime('now', new \DateTimeZone('Europe/Paris'));
+    }
 
     public function getId(): ?int
     {
