@@ -45,6 +45,11 @@ class ProspectRepository extends ServiceEntityRepository
 
         return $prospect;
     }
+    public function removeProspect(Prospect $prospect)
+    {
+        $this->manager->remove($prospect);
+        $this->manager->flush();
+    }
 
     // /**
     //  * @return Prospect[] Returns an array of Prospect objects

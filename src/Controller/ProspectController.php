@@ -86,6 +86,7 @@ class ProspectController extends AbstractController
             'rgpd' => $prospect->getRgpd(),
             'description' => $prospect->getDescription(),
             'created_at' => $prospect->getCreatedAt(),
+            'updated_at' => $prospect->getupdatedAt(),
             'status' => $prospect->getStatus(),
             'disabled' => $prospect->getDisabled()
         ];
@@ -96,7 +97,7 @@ class ProspectController extends AbstractController
     /**
      * @Route("/edite/{id}", name="update_prospect", methods={"PUT"})
      */
-    public function update($id, Request $request): JsonResponse
+    public function putProspect($id, Request $request): JsonResponse
     {
         $prospect = $this->prospectRepository->findOneBy(['id' => $id]);
         $data = json_decode($request->getContent(), true);
@@ -111,5 +112,16 @@ class ProspectController extends AbstractController
         $updatedProspect = $this->prospectRepository->updateProspect($prospect);
 
         return new JsonResponse($updatedProspect->toArray(), Response::HTTP_OK);
+    }
+    /**
+     * @Route("/supr/{id}", name="delete_prospect", methods={"DELETE"})
+     */
+    public function deleteOrigine($id): JsonResponse
+    {
+        $prospect = $this->prospectRepository->findOneBy(['id' => $id]);
+
+        $this->prospectRepository->removeProspect($prospect);
+
+        return new JsonResponse(['status' => 'Prospect deleted'], Response::HTTP_NO_CONTENT);
     }
 }
