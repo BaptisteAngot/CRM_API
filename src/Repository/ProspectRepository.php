@@ -2,11 +2,13 @@
 
 namespace App\Repository;
 
+use App\Entity\Origine;
 use App\Entity\Prospect;
 use DateTime;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
+use mysql_xdevapi\Exception;
 
 /**
  * @method Prospect|null find($id, $lockMode = null, $lockVersion = null)
@@ -15,20 +17,26 @@ use Doctrine\Persistence\ManagerRegistry;
  * @method Prospect[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */
 class ProspectRepository extends ServiceEntityRepository
+
 {
-    public function __construct(ManagerRegistry $registry,EntityManagerInterface $manager)
+    private $origineRepository;
+
+    public function __construct(ManagerRegistry $registry,EntityManagerInterface $manager,OrigineRepository $origineRepository)
     {
         parent::__construct($registry, Prospect::class);
         $this->manager = $manager;
+        $this->origineRepository = $origineRepository;
     }
-    public function saveProspect($mail, $nom, $rgpd, $describtion,$status)
+    public function saveProspect($mail, $nom, $origine, $rgpd, $describtion,$status)
     {
         $newProspect = new Prospect();
-
+        $origines =$this->origineRepository->find($origine);
+        if ($origines){
         $newProspect
             ->setMail($mail)
             ->setNom($nom)
             ->setRgpd($rgpd)
+            ->setOrigine($origines)
             ->setDescription($describtion)
             ->setStatus($status)
             ->setCreatedAt(new DateTime('NOW'))
@@ -36,6 +44,9 @@ class ProspectRepository extends ServiceEntityRepository
 
         $this->manager->persist($newProspect);
         $this->manager->flush();
+        }else{
+            throw new NotFoundHttpException('Origine id fail');
+        }
     }
     public function updateProspect(Prospect $prospect): Prospect
     {

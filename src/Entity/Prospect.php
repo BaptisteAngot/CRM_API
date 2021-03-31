@@ -57,6 +57,12 @@ class Prospect
      */
     private $updated_at;
 
+    /**
+     * @ORM\ManyToOne(targetEntity=Origine::class, inversedBy="prospects")
+     * @ORM\JoinColumn(nullable=false)
+     */
+    private $origine;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -163,6 +169,7 @@ class Prospect
             'id' => $this->getId(),
             'mail' => $this->getMail(),
             'nom' => $this->getNom(),
+            'origine'=> $this->getOrigine(),
             'rgpd' => $this->getRgpd(),
             'description' => $this->getDescription(),
             'status' => $this->getStatus(),
@@ -170,5 +177,17 @@ class Prospect
             'updatedAt' => $this->getUpdatedAt(),
             'disabled' => $this->getDisabled()
         ];
+    }
+
+    public function getOrigine(): ?Origine
+    {
+        return $this->origine;
+    }
+
+    public function setOrigine(?Origine $origine): self
+    {
+        $this->origine = $origine;
+
+        return $this;
     }
 }

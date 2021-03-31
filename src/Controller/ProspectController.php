@@ -37,13 +37,14 @@ class ProspectController extends AbstractController
         $mail = $data['mail'];
         $nom = $data['nom'];
         $rgpd = $data['rgpd'];
+        $origine = $data['origine'];
         $describtion = $data['description'];
         $status = $data['status'];
-        if (empty($mail) || empty($rgpd)) {
+        if (empty($mail) || empty($rgpd) || empty($origine)) {
             throw new NotFoundHttpException('Expecting mandatory parameters!');
         }
 
-        $this->prospectRepository->saveProspect($mail, $nom, $rgpd, $describtion,$status);
+        $this->prospectRepository->saveProspect($mail, $nom,$origine , $rgpd, $describtion,$status);
 
         return new JsonResponse(['status' => 'Prospect created!'], Response::HTTP_CREATED);
     }
@@ -61,6 +62,7 @@ class ProspectController extends AbstractController
                 'mail' => $prospect->getMail(),
                 'nom' => $prospect->getNom(),
                 'rgpd' => $prospect->getRgpd(),
+                'origine' => $prospect->getOrigine()->getNom(),
                 'description' => $prospect->getDescription(),
                 'created_at' => $prospect->getCreatedAt(),
                 'updated_at' => $prospect->getUpdatedAt(),
@@ -78,22 +80,26 @@ class ProspectController extends AbstractController
     public function getProspectID($id): JsonResponse
     {
         $prospect = $this->prospectRepository->findOneBy(['id' => $id]);
+        if ($prospect) {
 
-        $data = [
-            'id' => $prospect->getId(),
-            'mail' => $prospect->getMail(),
-            'nom' => $prospect->getNom(),
-            'rgpd' => $prospect->getRgpd(),
-            'description' => $prospect->getDescription(),
-            'created_at' => $prospect->getCreatedAt(),
-            'updated_at' => $prospect->getupdatedAt(),
-            'status' => $prospect->getStatus(),
-            'disabled' => $prospect->getDisabled()
-        ];
+            $data = [
+                'id' => $prospect->getId(),
+                'mail' => $prospect->getMail(),
+                'nom' => $prospect->getNom(),
+                'rgpd' => $prospect->getRgpd(),
+                'origine' => $prospect->getOrigine(),
+                'description' => $prospect->getDescription(),
+                'created_at' => $prospect->getCreatedAt(),
+                'updated_at' => $prospect->getupdatedAt(),
+                'status' => $prospect->getStatus(),
+                'disabled' => $prospect->getDisabled()
+            ];
 
-        return new JsonResponse($data, Response::HTTP_OK);
+            return new JsonResponse($data, Response::HTTP_OK);
+        }else{
+            throw new NotFoundHttpException('Expecting mandatory parameters!');
+        }
     }
-
     /**
      * @Route("/edite/{id}", name="update_prospect", methods={"PUT"})
      */
@@ -104,6 +110,7 @@ class ProspectController extends AbstractController
 
         empty($data['mail']) ? true : $prospect->setMail($data['mail']);
         empty($data['nom']) ? true : $prospect->setNom($data['nom']);
+        empty($data['origine']) ? true : $prospect->setOrigine($data['origine']);
         empty($data['rgpd']) ? true : $prospect->setRgpd($data['rgpd']);
         empty($data['description']) ? true : $prospect->setdescription($data['description']);
         empty($data['status']) ? true : $prospect->setStatus($data['phoneNumber']);

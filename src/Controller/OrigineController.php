@@ -52,6 +52,7 @@ class OrigineController extends AbstractController
             $data[] = [
                 'id' => $origine->getId(),
                 'nom' => $origine->getNom(),
+                'prospects' => $origine->getProspects(),
                 'created_at' => $origine->getCreatedAt(),
                 'updated_at' => $origine->getUpdatedAt()
             ];
@@ -69,6 +70,7 @@ class OrigineController extends AbstractController
         $data = [
             'id' => $origine->getId(),
             'nom' => $origine->getNom(),
+            'prospects' => $origine->getProspects(),
             'created_at' => $origine->getCreatedAt(),
             'updated_at' => $origine->getupdatedAt(),
 
