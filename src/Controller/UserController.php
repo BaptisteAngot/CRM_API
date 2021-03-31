@@ -106,27 +106,43 @@ class UserController extends AbstractController
     }
 
      /**
-     * @Route("/update/{id}", name="update_user", methods={"PUT"})
+     * @Route("/update", name="update_user", methods={"PUT"})
      * @param UserRepository $userRepository
      */
-    public function updateUser($id, Request $request,UserRepository $userRepository): JsonResponse
+    public function updateUser(Request $request,UserRepository $userRepository): JsonResponse
     {
-
-        $entityManager = $this->getDoctrine()->getManager();
+        $jwtController = new JWTController();
+        $headerAuthorization = $request->headers->get("authorization");
         $data = json_decode($request->getContent(),true);
-        $user = $userRepository->findOneBy(['id' => $id]);
-        isset($data["email"]) && $user->setEmail($data['email']);
-        isset($data["roles"]) && $user->setRoles($data['roles']);
-        isset($data["password"]) && $user->setPassword($data['password']);
-        isset($data["lastName"]) && $user->setLastName($data['lastName']);
-        isset($data["firstName"]) && $user->setFirstName($data['firstName']);
-        isset($data["telephone"]) && $user->setTelephone($data['telephone']);
-        isset($data["fonction"]) && $user->setFonction($data['fonction']);
+        $mail = $jwtController->getUsername($headerAuthorization);
 
-        $updatedUser = $this->userRepository->updateUser($user);
-        return JsonResponse::fromJsonString($this->serializeJson($user));
+        $user = $userRepository->find($data["id"]);
+
+        if ($user) {
+            if ($user->getEmail() == $mail || $jwtController->checkIfAdmin($headerAuthorization) == true ) { 
+                dd( $mail);
+              
+                $entityManager = $this->getDoctrine()->getManager();
+                $user = $userRepository->find($data["id"]);
+                isset($data["email"]) && $user->setEmail($data['email']);
+                isset($data["roles"]) && $user->setRoles($data['roles']);
+                isset($data["password"]) && $user->setPassword($data['password']);
+                isset($data["lastName"]) && $user->setLastName($data['lastName']);
+                isset($data["firstName"]) && $user->setFirstName($data['firstName']);
+                isset($data["telephone"]) && $user->setTelephone($data['telephone']);
+                isset($data["fonction"]) && $user->setFonction($data['fonction']);
+        
+                $updatedUser = $this->userRepository->updateUser($user);
+                return JsonResponse::fromJsonString($this->serializeJson($user));}
+                else {
+                    return  JsonResponse::fromJsonString("NOT AUTHORIZE TO ACCESS TO THIS DATAS",Response::HTTP_UNAUTHORIZED);
+                }
+            } else {
+                return  JsonResponse::fromJsonString("NOT AUTHORIZE TO ACCESS TO THIS DATAS",Response::HTTP_UNAUTHORIZED);
+            }
      
     }
+
    /**
      * @Route("/getAll", name="get_AllUsers", methods={"GET"})
      * @param UserRepository $userRepository
