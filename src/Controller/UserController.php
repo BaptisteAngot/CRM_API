@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\User;
 use App\Repository\UserRepository;
 use JMS\Serializer\SerializerInterface;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
@@ -60,10 +61,11 @@ class UserController extends AbstractController
         }
     }
 
-    private function serializeUser($objet, SerializerInterface $serializer, $groupe="user") {
+    private function serializeUser($objet, SerializerInterface $serializer, $groupe="user"): string
+    {
         return $serializer->serialize($objet,"json", SerializationContext::create()->setGroups(array($groupe)));
     }
-    protected function serializeJson($objet)
+    protected function serializeJson($objet): string
     {
         $defaultContext = [
             AbstractNormalizer::CIRCULAR_REFERENCE_HANDLER => function ($object, $format, $context) {
@@ -74,19 +76,18 @@ class UserController extends AbstractController
         $serializer = new Serializer([$normalizer], [new JsonEncoder()]);
         return $serializer->serialize($objet, 'json');
     }
+
     /**
      * @Route("/create", name="create_user", methods={"POST"})
      * @param UserPasswordEncoderInterface $passwordEncoder
      * @param UserRepository $userRepository
      * @param Request $request
+     * @return JsonResponse
      */
     public function createUser(UserPasswordEncoderInterface $passwordEncoder,UserRepository $userRepository, Request $request): JsonResponse
     {
         $jwtController = new JWTController();
         $headerAuthorization = $request->headers->get("authorization");
-        $mail = $jwtController->getUsername($headerAuthorization);
-
-        
         $data = json_decode($request->getContent(), true);
         $email = $data['email'];
         $roles = $data['roles'];
@@ -105,9 +106,11 @@ class UserController extends AbstractController
 
     }
 
-     /**
+    /**
      * @Route("/update", name="update_user", methods={"PUT"})
+     * @param Request $request
      * @param UserRepository $userRepository
+     * @return JsonResponse
      */
     public function updateUser(Request $request,UserRepository $userRepository): JsonResponse
     {
@@ -119,10 +122,7 @@ class UserController extends AbstractController
         $user = $userRepository->find($data["id"]);
 
         if ($user) {
-            if ($user->getEmail() == $mail || $jwtController->checkIfAdmin($headerAuthorization) == true ) { 
-                dd( $mail);
-              
-                $entityManager = $this->getDoctrine()->getManager();
+            if ($user->getEmail() == $mail || $jwtController->checkIfAdmin($headerAuthorization) == true ) {
                 $user = $userRepository->find($data["id"]);
                 isset($data["email"]) && $user->setEmail($data['email']);
                 isset($data["roles"]) && $user->setRoles($data['roles']);
@@ -131,8 +131,6 @@ class UserController extends AbstractController
                 isset($data["firstName"]) && $user->setFirstName($data['firstName']);
                 isset($data["telephone"]) && $user->setTelephone($data['telephone']);
                 isset($data["fonction"]) && $user->setFonction($data['fonction']);
-        
-                $updatedUser = $this->userRepository->updateUser($user);
                 return JsonResponse::fromJsonString($this->serializeJson($user));}
                 else {
                     return  JsonResponse::fromJsonString("NOT AUTHORIZE TO ACCESS TO THIS DATAS",Response::HTTP_UNAUTHORIZED);
@@ -149,7 +147,7 @@ class UserController extends AbstractController
      * @param Request $request
      * @return Response
      */
-    public function userJson(UserRepository $userRepository, Request $request)
+    public function userJson(UserRepository $userRepository, Request $request): Response
     {
         $filter = [];
         $em = $this->getDoctrine()->getManager();
@@ -162,13 +160,13 @@ class UserController extends AbstractController
         return JsonResponse::fromJsonString($this->serializeJson($userRepository->findBy($filter)));
     }
 
-        /**
+    /**
      * @Route("/delete", name="delete_user", methods={"DELETE"})
      * @param Request $request
      * @param UserRepository $userRepository
      * @return Response
      */
-    public function deleteUser(Request $request, UserRepository $userRepository)
+    public function deleteUser(Request $request, UserRepository $userRepository): Response
     {
         $entityManager = $this->getDoctrine()->getManager();
         $response = new Response();
