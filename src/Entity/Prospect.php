@@ -63,6 +63,10 @@ class Prospect
      */
     private $origine;
 
+    public const CHAUD = "CHAUD";
+    public const TIEDE = "TIEDE";
+    public const FROID = "FROID";
+
     public function getId(): ?int
     {
         return $this->id;
