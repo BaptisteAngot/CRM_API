@@ -99,6 +99,9 @@
     "friendsofphp/proxy-manager-lts": {
         "version": "v1.0.3"
     },
+    "fzaninotto/faker": {
+        "version": "v1.9.2"
+    },
     "jms/metadata": {
         "version": "2.5.0"
     },
@@ -166,6 +169,9 @@
     },
     "nikic/php-parser": {
         "version": "v4.10.4"
+    },
+    "php": {
+        "version": "7.4"
     },
     "phpdocumentor/reflection-common": {
         "version": "2.2.0"
