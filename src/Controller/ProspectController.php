@@ -9,6 +9,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Annotation\Route;
 /**
  * Class ProspectController
@@ -113,8 +114,8 @@ class ProspectController extends AbstractController
         empty($data['origine']) ? true : $prospect->setOrigine($data['origine']);
         empty($data['rgpd']) ? true : $prospect->setRgpd($data['rgpd']);
         empty($data['description']) ? true : $prospect->setdescription($data['description']);
-        empty($data['status']) ? true : $prospect->setStatus($data['phoneNumber']);
-        empty($data['disabled']) ? true : $prospect->setDisabled($data['phoneNumber']);
+        empty($data['status']) ? true : $prospect->setStatus($data['status']);
+        empty($data['disabled']) ? true : $prospect->setDisabled($data['disabled']);
 
         $updatedProspect = $this->prospectRepository->updateProspect($prospect);
 
@@ -123,7 +124,7 @@ class ProspectController extends AbstractController
     /**
      * @Route("/delete/{id}", name="delete_prospect", methods={"DELETE"})
      */
-    public function deleteOrigine($id): JsonResponse
+    public function deleteProspect($id): JsonResponse
     {
         $prospect = $this->prospectRepository->findOneBy(['id' => $id]);
 
