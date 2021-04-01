@@ -132,4 +132,20 @@ class ProspectController extends AbstractController
 
         return new JsonResponse(['status' => 'Prospect deleted'], Response::HTTP_NO_CONTENT);
     }
+
+    /**
+     * @Route("/disabled/{id}", name="disabled_prospect", methods={"POST"})
+     */
+    public function disabled_prospect($id) {
+        $prospect = $this->prospectRepository->findOneBy(['id' => $id]);
+        if ($prospect) {
+            $prospect->setDisabled(true);
+            $entityManager = $this->getDoctrine()->getManager();
+            $entityManager->flush();
+
+            return new JsonResponse("Prospect at id " . $prospect->getId() . " is now disabled", Response::HTTP_OK);
+        }else {
+            return new JsonResponse("Prospect don't exist", Response::HTTP_NOT_FOUND);
+        }
+    }
 }
