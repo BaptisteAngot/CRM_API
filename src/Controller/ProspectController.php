@@ -88,7 +88,7 @@ class ProspectController extends AbstractController
                 'mail' => $prospect->getMail(),
                 'nom' => $prospect->getNom(),
                 'rgpd' => $prospect->getRgpd(),
-                'origine' => $prospect->getOrigine(),
+                'origine' => ['id' => $prospect->getOrigine()->getId(), 'name' => $prospect->getOrigine()->getNom()],
                 'description' => $prospect->getDescription(),
                 'created_at' => $prospect->getCreatedAt(),
                 'updated_at' => $prospect->getupdatedAt(),
@@ -144,6 +144,26 @@ class ProspectController extends AbstractController
             $entityManager->flush();
 
             return new JsonResponse("Prospect at id " . $prospect->getId() . " is now disabled", Response::HTTP_OK);
+        }else {
+            return new JsonResponse("Prospect don't exist", Response::HTTP_NOT_FOUND);
+        }
+    }
+
+    /**
+     * @Route("/status/{id}", name="status_prospect", methods={"POST"})
+     * @param $id
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function status_prospect($id, Request $request) {
+        $datas = $request->request->get("status");
+        $prospect = $this->prospectRepository->findOneBy(['id' => $id]);
+        if ($prospect) {
+            $prospect->setStatus($datas);
+            $entityManager = $this->getDoctrine()->getManager();
+            $entityManager->flush();
+
+            return new JsonResponse("Prospect at id " . $prospect->getId() . " has now status " . $datas, Response::HTTP_OK);
         }else {
             return new JsonResponse("Prospect don't exist", Response::HTTP_NOT_FOUND);
         }
