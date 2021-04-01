@@ -26,7 +26,7 @@ class ProspectController extends AbstractController
         $this->prospectRepository = $prospectRepository;
     }
     /**
-     * @Route("/ajout", name="prospect_add", methods={"POST"})
+     * @Route("/add", name="prospect_add", methods={"POST"})
      * @param Request $request
      * @return JsonResponse
      */
@@ -49,7 +49,7 @@ class ProspectController extends AbstractController
         return new JsonResponse(['status' => 'Prospect created!'], Response::HTTP_CREATED);
     }
     /**
-     * @Route("/tous", name="get_all_prospect", methods={"GET"})
+     * @Route("/all", name="get_all_prospect", methods={"GET"})
      */
     public function getAllProspect(): JsonResponse
     {
@@ -101,7 +101,7 @@ class ProspectController extends AbstractController
         }
     }
     /**
-     * @Route("/edite/{id}", name="update_prospect", methods={"PUT"})
+     * @Route("/update/{id}", name="update_prospect", methods={"PUT"})
      */
     public function putProspect($id, Request $request): JsonResponse
     {
@@ -121,7 +121,7 @@ class ProspectController extends AbstractController
         return new JsonResponse($updatedProspect->toArray(), Response::HTTP_OK);
     }
     /**
-     * @Route("/supr/{id}", name="delete_prospect", methods={"DELETE"})
+     * @Route("/delete/{id}", name="delete_prospect", methods={"DELETE"})
      */
     public function deleteOrigine($id): JsonResponse
     {

@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\Origine;
+use App\Entity\Prospect;
 use DateTime;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -46,6 +47,16 @@ class OrigineRepository extends ServiceEntityRepository
         $this->manager->remove($origine);
         $this->manager->flush();
     }
+
+    public function addProspectToOrigine(Prospect $prospect)
+    {
+        $origine = new Origine();
+        $origine->addProspect($prospect);
+
+        $this->manager->persist($origine);
+        $this->manager->flush();
+    }
+
 
     // /**
     //  * @return Origine[] Returns an array of Origine objects

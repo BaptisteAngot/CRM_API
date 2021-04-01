@@ -44,6 +44,7 @@ class ProspectRepository extends ServiceEntityRepository
 
         $this->manager->persist($newProspect);
         $this->manager->flush();
+        $this->origineRepository->addProspectToOrigine($newProspect);
         }else{
             throw new NotFoundHttpException('Origine id fail');
         }

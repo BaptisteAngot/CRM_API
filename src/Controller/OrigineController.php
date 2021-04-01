@@ -23,7 +23,7 @@ class OrigineController extends AbstractController
         $this->origineRepository = $origineRepository;
     }
     /**
-     * @Route("/ajout", name="origine_add", methods={"POST"})
+     * @Route("/add", name="origine_add", methods={"POST"})
      * @param Request $request
      * @return JsonResponse
      */
@@ -41,7 +41,7 @@ class OrigineController extends AbstractController
         return new JsonResponse(['status' => 'Origine created!'], Response::HTTP_CREATED);
     }
     /**
-     * @Route("/tous", name="get_all_origine", methods={"GET"})
+     * @Route("/all", name="get_all_origine", methods={"GET"})
      */
     public function getAllorigine(): JsonResponse
     {
@@ -79,7 +79,7 @@ class OrigineController extends AbstractController
         return new JsonResponse($data, Response::HTTP_OK);
     }
     /**
-     * @Route("/edite/{id}", name="update_origine", methods={"PUT"})
+     * @Route("/update/{id}", name="update_origine", methods={"PUT"})
      */
     public function pudOrigine($id, Request $request): JsonResponse
     {
@@ -93,7 +93,7 @@ class OrigineController extends AbstractController
         return new JsonResponse($updatedOrigine->toArray(), Response::HTTP_OK);
     }
     /**
-     * @Route("/supr/{id}", name="delete_origine", methods={"DELETE"})
+     * @Route("/delete/{id}", name="delete_origine", methods={"DELETE"})
      */
     public function deleteOrigine($id): JsonResponse
     {
