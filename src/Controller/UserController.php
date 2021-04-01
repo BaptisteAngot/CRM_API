@@ -160,13 +160,14 @@ class UserController extends AbstractController
         return JsonResponse::fromJsonString($this->serializeJson($userRepository->findBy($filter)));
     }
 
-    /**
-     * @Route("/delete", name="delete_user", methods={"DELETE"})
+
+        /**
+     * @Route("/disable", name="disabled_user", methods={"PUT"})
      * @param Request $request
      * @param UserRepository $userRepository
      * @return Response
      */
-    public function deleteUser(Request $request, UserRepository $userRepository): Response
+    public function disableUser(Request $request, UserRepository $userRepository)
     {
         $entityManager = $this->getDoctrine()->getManager();
         $response = new Response();
@@ -182,7 +183,8 @@ class UserController extends AbstractController
                 $response->setContent("Ce user n'existe pas");
                 $response->setStatusCode(Response::HTTP_BAD_REQUEST);
             } else {
-                $entityManager->remove($user);
+                $user->setDisabled(true);
+                $entityManager->persist($user);
                 $entityManager->flush();
                 $response->setStatusCode(Response::HTTP_OK);
             }
