@@ -65,17 +65,6 @@ class UserController extends AbstractController
     {
         return $serializer->serialize($objet,"json", SerializationContext::create()->setGroups(array($groupe)));
     }
-    protected function serializeJson($objet): string
-    {
-        $defaultContext = [
-            AbstractNormalizer::CIRCULAR_REFERENCE_HANDLER => function ($object, $format, $context) {
-                return $object->getNom();
-            },
-        ];
-        $normalizer = new ObjectNormalizer(null, null, null, null, null, null, $defaultContext);
-        $serializer = new Serializer([$normalizer], [new JsonEncoder()]);
-        return $serializer->serialize($objet, 'json');
-    }
 
     /**
      * @Route("/create", name="create_user", methods={"POST"})
@@ -96,11 +85,12 @@ class UserController extends AbstractController
         $firstName = $data['firstName'];
         $telephone = $data['telephone'];
         $fonction = $data["fonction"];
+        $rgpd = $data["rgpd"];
 
-        if (empty($email) || empty($roles) || empty($password)|| empty($lastName) || empty($firstName) || empty($telephone) || empty($fonction) || $jwtController->checkIfAdmin($headerAuthorization) == false ) {
+        if (empty($email) || empty($roles) || empty($password)|| empty($lastName) || empty($firstName) || empty($telephone) || empty($fonction) || $jwtController->checkIfAdmin($headerAuthorization) == false || (empty($rgpd) || $rgpd=false) ) {
             throw new NotFoundHttpException('Expecting mandatory parameters!');
         } else {
-            $this->userRepository->saveUser($email, $roles, $password, $lastName, $firstName, $telephone, $fonction);
+            $this->userRepository->saveUser($email, $roles, $password, $lastName, $firstName, $telephone, $fonction, $rgpd);
             return new JsonResponse(['status' => 'Customer created!'], Response::HTTP_CREATED);
         } 
 
@@ -110,15 +100,16 @@ class UserController extends AbstractController
      * @Route("/update", name="update_user", methods={"PUT"})
      * @param Request $request
      * @param UserRepository $userRepository
+     * @param SerializerInterface $serializer
      * @return JsonResponse
      */
-    public function updateUser(Request $request,UserRepository $userRepository): JsonResponse
+    public function updateUser(Request $request,UserRepository $userRepository,SerializerInterface $serializer): JsonResponse
     {
         $jwtController = new JWTController();
         $headerAuthorization = $request->headers->get("authorization");
         $data = json_decode($request->getContent(),true);
         $mail = $jwtController->getUsername($headerAuthorization);
-
+        $entityManager = $this->getDoctrine()->getManager();
         $user = $userRepository->find($data["id"]);
 
         if ($user) {
@@ -131,7 +122,8 @@ class UserController extends AbstractController
                 isset($data["firstName"]) && $user->setFirstName($data['firstName']);
                 isset($data["telephone"]) && $user->setTelephone($data['telephone']);
                 isset($data["fonction"]) && $user->setFonction($data['fonction']);
-                return JsonResponse::fromJsonString($this->serializeJson($user));}
+                $updatedUser = $this->userRepository->updateUser($user);;
+                return JsonResponse::fromJsonString($this->serializeUser($user,$serializer));}
                 else {
                     return  JsonResponse::fromJsonString("NOT AUTHORIZE TO ACCESS TO THIS DATAS",Response::HTTP_UNAUTHORIZED);
                 }
@@ -144,10 +136,11 @@ class UserController extends AbstractController
    /**
      * @Route("/getAll", name="get_AllUsers", methods={"GET"})
      * @param UserRepository $userRepository
+     * @param SerializerInterface $serializer
      * @param Request $request
      * @return Response
      */
-    public function userJson(UserRepository $userRepository, Request $request): Response
+    public function userJson(UserRepository $userRepository, Request $request, SerializerInterface $serializer): Response
     {
         $filter = [];
         $em = $this->getDoctrine()->getManager();
@@ -157,11 +150,11 @@ class UserController extends AbstractController
                 $filter[$value] = $request->query->get($value);
             }
         }
-        return JsonResponse::fromJsonString($this->serializeJson($userRepository->findBy($filter)));
+        return JsonResponse::fromJsonString($this->serializeUser($userRepository->findBy($filter),$serializer));
     }
 
 
-        /**
+    /**
      * @Route("/disable", name="disabled_user", methods={"PUT"})
      * @param Request $request
      * @param UserRepository $userRepository

@@ -87,7 +87,6 @@ class User implements UserInterface
     public function __construct()
     {
         $this->disabled = false;
-        $this->rgpd = false;
         $this->created_at = new \DateTime('now', new \DateTimeZone('Europe/Paris'));
     }
 
