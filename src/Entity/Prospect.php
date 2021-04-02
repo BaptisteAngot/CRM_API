@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\ProspectRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -62,6 +64,16 @@ class Prospect
      * @ORM\JoinColumn(nullable=false)
      */
     private $origine;
+
+    /**
+     * @ORM\OneToMany(targetEntity=RendezVous::class, mappedBy="prospectId")
+     */
+    private $rendezVouses;
+
+    public function __construct()
+    {
+        $this->rendezVouses = new ArrayCollection();
+    }
 
     public const CHAUD = "CHAUD";
     public const TIEDE = "TIEDE";
@@ -191,6 +203,36 @@ class Prospect
     public function setOrigine(?Origine $origine): self
     {
         $this->origine = $origine;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|RendezVous[]
+     */
+    public function getRendezVouses(): Collection
+    {
+        return $this->rendezVouses;
+    }
+
+    public function addRendezVouse(RendezVous $rendezVouse): self
+    {
+        if (!$this->rendezVouses->contains($rendezVouse)) {
+            $this->rendezVouses[] = $rendezVouse;
+            $rendezVouse->setProspectId($this);
+        }
+
+        return $this;
+    }
+
+    public function removeRendezVouse(RendezVous $rendezVouse): self
+    {
+        if ($this->rendezVouses->removeElement($rendezVouse)) {
+            // set the owning side to null (unless already changed)
+            if ($rendezVouse->getProspectId() === $this) {
+                $rendezVouse->setProspectId(null);
+            }
+        }
 
         return $this;
     }
