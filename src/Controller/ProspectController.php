@@ -2,10 +2,9 @@
 
 namespace App\Controller;
 
+use App\Repository\OrigineRepository;
 use App\Entity\Prospect;
 use App\Repository\ProspectRepository;
-use App\Repository\UserRepository;
-use JMS\Serializer\SerializerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -19,36 +18,59 @@ use Symfony\Component\Routing\Annotation\Route;
  */
 class ProspectController extends AbstractController
 {
-
-
     private $prospectRepository;
 
     public function __construct(ProspectRepository $prospectRepository)
     {
         $this->prospectRepository = $prospectRepository;
     }
+
     /**
      * @Route("/add", name="prospect_add", methods={"POST"})
      * @param Request $request
+     * @param OrigineRepository $origineRepository
      * @return JsonResponse
      */
 
-    public  function addProspect(Request $request): JsonResponse
+    public  function addProspect(Request $request, OrigineRepository $origineRepository): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
-        $mail = $data['mail'];
-        $nom = $data['nom'];
-        $rgpd = $data['rgpd'];
-        $origine = $data['origine'];
-        $describtion = $data['description'];
-        $status = $data['status'];
-        if (empty($mail) || empty($rgpd) || empty($origine)) {
-            throw new NotFoundHttpException('Expecting mandatory parameters!');
+        $errors = [];
+        if (isset($data['mail'])) {
+            $mail = $data['mail'];
+        }else {
+            $errors["mail"] = "No mail";
         }
 
-        $this->prospectRepository->saveProspect($mail, $nom,$origine , $rgpd, $describtion,$status);
+        $nom = isset($data['nom']) ? $data['nom'] : null;
 
-        return new JsonResponse(['status' => 'Prospect created!'], Response::HTTP_CREATED);
+        if(isset($data['rgpd'])) {
+            if ($data['rgpd'] == true) {
+                $rgpd = $data['rgpd'];
+            }else {
+                $errors["rpgd"] = "No accepted";
+            }
+        }else {
+            $errors["rpgd"] = "No parameter rpgd";
+        }
+
+        if (isset($data['origine'])) {
+            $origin = $origineRepository->find($data['origine']);
+            if (!$origin) {
+                $errors["origine"] = "Origin don't exist";
+            }
+        }else {
+            $errors["origine"] = "Origin argument no present ";
+        }
+
+        $description = isset($data['description']) ? $data['description'] : null;
+        $status = isset($data['$status']) ? $data['$status'] : null;
+        if (!empty($errors)) {
+            return new JsonResponse($errors, Response::HTTP_PARTIAL_CONTENT);
+        }else {
+            $id = $this->prospectRepository->saveProspect($mail, $nom, $origin , $rgpd, $description,$status);
+            return new JsonResponse(['status' => 'Prospect created!', 'id' => $id], Response::HTTP_CREATED);
+        }
     }
     /**
      * @Route("/all", name="get_all_prospect", methods={"GET"})
@@ -78,6 +100,8 @@ class ProspectController extends AbstractController
 
     /**
      * @Route("/{id}", name="get_one_prospect", methods={"GET"})
+     * @param $id
+     * @return JsonResponse
      */
     public function getProspectID($id): JsonResponse
     {
@@ -102,8 +126,12 @@ class ProspectController extends AbstractController
             throw new NotFoundHttpException('Expecting mandatory parameters!');
         }
     }
+
     /**
      * @Route("/update/{id}", name="update_prospect", methods={"PUT"})
+     * @param $id
+     * @param Request $request
+     * @return JsonResponse
      */
     public function putProspect($id, Request $request): JsonResponse
     {
@@ -122,8 +150,11 @@ class ProspectController extends AbstractController
 
         return new JsonResponse($updatedProspect->toArray(), Response::HTTP_OK);
     }
+
     /**
      * @Route("/delete/{id}", name="delete_prospect", methods={"DELETE"})
+     * @param $id
+     * @return JsonResponse
      */
     public function deleteProspect($id): JsonResponse
     {
@@ -136,8 +167,11 @@ class ProspectController extends AbstractController
 
     /**
      * @Route("/disabled/{id}", name="disabled_prospect", methods={"POST"})
+     * @param $id
+     * @return JsonResponse
      */
-    public function disabled_prospect($id) {
+    public function disabled_prospect($id): JsonResponse
+    {
         $prospect = $this->prospectRepository->findOneBy(['id' => $id]);
         if ($prospect) {
             $prospect->setDisabled(true);
@@ -156,7 +190,8 @@ class ProspectController extends AbstractController
      * @param Request $request
      * @return JsonResponse
      */
-    public function status_prospect($id, Request $request) {
+    public function status_prospect($id, Request $request): JsonResponse
+    {
         $datas = $request->request->get("status");
         $prospect = $this->prospectRepository->findOneBy(['id' => $id]);
         if ($prospect) {
