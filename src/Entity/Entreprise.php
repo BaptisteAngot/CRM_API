@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\EntrepriseRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -57,10 +59,22 @@ class Entreprise
      */
     private $updated_at;
 
+    /**
+     * @ORM\OneToMany(targetEntity=Client::class, mappedBy="id_entreprise")
+     */
+    private $clients;
+
+    /**
+     * @ORM\OneToMany(targetEntity=ActivityArea::class, mappedBy="entreprise")
+     */
+    private $id_activityArea;
+
     public function __construct()
     {
   
         $this->created_at = new \DateTime('now', new \DateTimeZone('Europe/Paris'));
+        $this->clients = new ArrayCollection();
+        $this->id_activityArea = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -160,6 +174,66 @@ class Entreprise
     public function setUpdatedAt(?\DateTimeInterface $updated_at): self
     {
         $this->updated_at = $updated_at;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Client[]
+     */
+    public function getClients(): Collection
+    {
+        return $this->clients;
+    }
+
+    public function addClient(Client $client): self
+    {
+        if (!$this->clients->contains($client)) {
+            $this->clients[] = $client;
+            $client->setIdEntreprise($this);
+        }
+
+        return $this;
+    }
+
+    public function removeClient(Client $client): self
+    {
+        if ($this->clients->removeElement($client)) {
+            // set the owning side to null (unless already changed)
+            if ($client->getIdEntreprise() === $this) {
+                $client->setIdEntreprise(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|ActivityArea[]
+     */
+    public function getIdActivityArea(): Collection
+    {
+        return $this->id_activityArea;
+    }
+
+    public function addIdActivityArea(ActivityArea $idActivityArea): self
+    {
+        if (!$this->id_activityArea->contains($idActivityArea)) {
+            $this->id_activityArea[] = $idActivityArea;
+            $idActivityArea->setEntreprise($this);
+        }
+
+        return $this;
+    }
+
+    public function removeIdActivityArea(ActivityArea $idActivityArea): self
+    {
+        if ($this->id_activityArea->removeElement($idActivityArea)) {
+            // set the owning side to null (unless already changed)
+            if ($idActivityArea->getEntreprise() === $this) {
+                $idActivityArea->setEntreprise(null);
+            }
+        }
 
         return $this;
     }
