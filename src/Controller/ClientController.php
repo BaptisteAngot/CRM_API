@@ -14,7 +14,8 @@ use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
-
+use JMS\Serializer\SerializerInterface;
+use JMS\Serializer\SerializationContext;
 /**
  * Class ClientController
  * @package App\Controller
@@ -28,28 +29,11 @@ class ClientController extends AbstractController
     {
         $this->clientRepository = $clientRepository;
     }
-    protected function serializeJson($objet)
+    private function serializeUser($objet, SerializerInterface $serializer, $groupe="user"): string
     {
-        $defaultContext = [
-            AbstractNormalizer::CIRCULAR_REFERENCE_HANDLER => function ($object, $format, $context) {
-                return $object->getNom();
-            },
-        ];
-        $normalizer = new ObjectNormalizer(null, null, null, null, null, null, $defaultContext);
-        $serializer = new Serializer([$normalizer], [new JsonEncoder()]);
-        return $serializer->serialize($objet, 'json');
+        return $serializer->serialize($objet,"json", SerializationContext::create()->setGroups(array($groupe)));
     }
     /**
-    /**
-     * @Route("/client", name="client")
-     */
-    public function index(): Response
-    {
-        return $this->render('client/index.html.twig', [
-            'controller_name' => 'ClientController',
-        ]);
-    }
-        /**
      * @Route("/create", name="create_client", methods={"POST"})
      * @param ClientRepository $clientRepository
      * @param Request $request
@@ -76,11 +60,12 @@ class ClientController extends AbstractController
     
     }
 
-         /**
+    /**
      * @Route("/update", name="update_client", methods={"PUT"})
      * @param ClientRepository $clientRepository
+     * @param SerializerInterface $serializer
      */
-    public function updateClient(Request $request,ClientRepository $clientRepository): JsonResponse
+    public function updateClient(Request $request,ClientRepository $clientRepository,SerializerInterface $serializer): JsonResponse
     {
     
         $data = json_decode($request->getContent(),true);
@@ -94,17 +79,18 @@ class ClientController extends AbstractController
                 $client->setUpdatedAt(new \DateTime('now', new \DateTimeZone('Europe/Paris')));
         
                 $updatedUser = $this->clientRepository->updateClient($client);
-                return JsonResponse::fromJsonString($this->serializeJson($client));
+                return JsonResponse::fromJsonString($this->serializeUser($client,$serializer));
     }
               
      
-       /**
+    /**
      * @Route("/getAll", name="get_AllClient", methods={"GET"})
      * @param ClientRepository $clientRepository
+     * @param SerializerInterface $serializer
      * @param Request $request
      * @return Response
      */
-    public function clientJson(ClientRepository $clientRepository, Request $request)
+    public function clientJson(ClientRepository $clientRepository, Request $request,SerializerInterface $serializer)
     {
         $filter = [];
         $em = $this->getDoctrine()->getManager();
@@ -114,7 +100,7 @@ class ClientController extends AbstractController
                 $filter[$value] = $request->query->get($value);
             }
         }
-        return JsonResponse::fromJsonString($this->serializeJson($clientRepository->findBy($filter)));
+        return JsonResponse::fromJsonString($this->serializeUser($clientRepository->findBy($filter), $serializer));
     }
       /**
      * @Route("/disable", name="disable_client", methods={"PUT"})

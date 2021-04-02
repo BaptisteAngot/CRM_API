@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\ClientRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
@@ -62,11 +64,28 @@ class Client
      */
     private $disabled;
 
+    /**
+     * @ORM\ManyToMany(targetEntity=User::class, inversedBy="clients")
+     */
+    private $id_users;
+
+    /**
+     * @ORM\ManyToOne(targetEntity=Entreprise::class, inversedBy="clients")
+     */
+    private $id_entreprise;
+
+    /**
+     * @ORM\OneToMany(targetEntity=Ticket::class, mappedBy="id_client")
+     */
+    private $tickets;
+
     public function __construct()
     {
         $this->disabled = false;
         $this->rgpd = false;
         $this->created_at = new \DateTime('now', new \DateTimeZone('Europe/Paris'));
+        $this->id_users = new ArrayCollection();
+        $this->tickets = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -178,6 +197,72 @@ class Client
     public function setDisabled(bool $disabled): self
     {
         $this->disabled = $disabled;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|User[]
+     */
+    public function getIdUsers(): Collection
+    {
+        return $this->id_users;
+    }
+
+    public function addIdUser(User $idUser): self
+    {
+        if (!$this->id_users->contains($idUser)) {
+            $this->id_users[] = $idUser;
+        }
+
+        return $this;
+    }
+
+    public function removeIdUser(User $idUser): self
+    {
+        $this->id_users->removeElement($idUser);
+
+        return $this;
+    }
+
+    public function getIdEntreprise(): ?Entreprise
+    {
+        return $this->id_entreprise;
+    }
+
+    public function setIdEntreprise(?Entreprise $id_entreprise): self
+    {
+        $this->id_entreprise = $id_entreprise;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Ticket[]
+     */
+    public function getTickets(): Collection
+    {
+        return $this->tickets;
+    }
+
+    public function addTicket(Ticket $ticket): self
+    {
+        if (!$this->tickets->contains($ticket)) {
+            $this->tickets[] = $ticket;
+            $ticket->setIdClient($this);
+        }
+
+        return $this;
+    }
+
+    public function removeTicket(Ticket $ticket): self
+    {
+        if ($this->tickets->removeElement($ticket)) {
+            // set the owning side to null (unless already changed)
+            if ($ticket->getIdClient() === $this) {
+                $ticket->setIdClient(null);
+            }
+        }
 
         return $this;
     }

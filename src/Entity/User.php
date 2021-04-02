@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\UserRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\UserInterface;
 use JMS\Serializer\Annotation as Serializer;
@@ -84,11 +86,28 @@ class User implements UserInterface
      */
     private $rgpd;
 
+    /**
+     * @ORM\ManyToMany(targetEntity=Client::class, mappedBy="id_users")
+     */
+    private $clients;
+
+    /**
+     * @ORM\OneToMany(targetEntity=GestionTicket::class, mappedBy="id_user")
+     */
+    private $gestionTickets;
+
+    /**
+     * @ORM\OneToMany(targetEntity=Log::class, mappedBy="id_user")
+     */
+    private $logs;
+
     public function __construct()
     {
         $this->disabled = false;
-        $this->rgpd = false;
         $this->created_at = new \DateTime('now', new \DateTimeZone('Europe/Paris'));
+        $this->clients = new ArrayCollection();
+        $this->gestionTickets = new ArrayCollection();
+        $this->logs = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -271,5 +290,92 @@ class User implements UserInterface
     public function getFullname(): String
     {
         return $this->getLastName() . " " . $this->getFirstName();
+    }
+
+    /**
+     * @return Collection|Client[]
+     */
+    public function getClients(): Collection
+    {
+        return $this->clients;
+    }
+
+    public function addClient(Client $client): self
+    {
+        if (!$this->clients->contains($client)) {
+            $this->clients[] = $client;
+            $client->addIdUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeClient(Client $client): self
+    {
+        if ($this->clients->removeElement($client)) {
+            $client->removeIdUser($this);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|GestionTicket[]
+     */
+    public function getGestionTickets(): Collection
+    {
+        return $this->gestionTickets;
+    }
+
+    public function addGestionTicket(GestionTicket $gestionTicket): self
+    {
+        if (!$this->gestionTickets->contains($gestionTicket)) {
+            $this->gestionTickets[] = $gestionTicket;
+            $gestionTicket->setIdUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeGestionTicket(GestionTicket $gestionTicket): self
+    {
+        if ($this->gestionTickets->removeElement($gestionTicket)) {
+            // set the owning side to null (unless already changed)
+            if ($gestionTicket->getIdUser() === $this) {
+                $gestionTicket->setIdUser(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Log[]
+     */
+    public function getLogs(): Collection
+    {
+        return $this->logs;
+    }
+
+    public function addLog(Log $log): self
+    {
+        if (!$this->logs->contains($log)) {
+            $this->logs[] = $log;
+            $log->setIdUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeLog(Log $log): self
+    {
+        if ($this->logs->removeElement($log)) {
+            // set the owning side to null (unless already changed)
+            if ($log->getIdUser() === $this) {
+                $log->setIdUser(null);
+            }
+        }
+
+        return $this;
     }
 }
