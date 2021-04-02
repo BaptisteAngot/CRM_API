@@ -28,7 +28,7 @@ class ProspectRepository extends ServiceEntityRepository
         $this->manager = $manager;
         $this->origineRepository = $origineRepository;
     }
-    public function saveProspect($mail, $nom, $origine, $rgpd, $describtion,$status)
+    public function saveProspect($mail, $nom, $origine, $rgpd, $describtion,$status): ?int
     {
         $newProspect = new Prospect();
         $origines =$this->origineRepository->find($origine);
@@ -45,10 +45,10 @@ class ProspectRepository extends ServiceEntityRepository
 
         $this->manager->persist($newProspect);
         $this->manager->flush();
-        $this->origineRepository->addProspectToOrigine($newProspect);
         }else{
             throw new NotFoundHttpException('Origine id fail');
         }
+        return $newProspect->getId();
     }
     public function updateProspect(Prospect $prospect): Prospect
     {
