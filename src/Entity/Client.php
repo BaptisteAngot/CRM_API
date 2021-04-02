@@ -79,6 +79,11 @@ class Client
      */
     private $tickets;
 
+    /**
+     * @ORM\OneToMany(targetEntity=RendezVous::class, mappedBy="clientId")
+     */
+    private $rendezVouses;
+
     public function __construct()
     {
         $this->disabled = false;
@@ -86,6 +91,7 @@ class Client
         $this->created_at = new \DateTime('now', new \DateTimeZone('Europe/Paris'));
         $this->id_users = new ArrayCollection();
         $this->tickets = new ArrayCollection();
+        $this->rendezVouses = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -261,6 +267,36 @@ class Client
             // set the owning side to null (unless already changed)
             if ($ticket->getIdClient() === $this) {
                 $ticket->setIdClient(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|RendezVous[]
+     */
+    public function getRendezVouses(): Collection
+    {
+        return $this->rendezVouses;
+    }
+
+    public function addRendezVouse(RendezVous $rendezVouse): self
+    {
+        if (!$this->rendezVouses->contains($rendezVouse)) {
+            $this->rendezVouses[] = $rendezVouse;
+            $rendezVouse->setClientId($this);
+        }
+
+        return $this;
+    }
+
+    public function removeRendezVouse(RendezVous $rendezVouse): self
+    {
+        if ($this->rendezVouses->removeElement($rendezVouse)) {
+            // set the owning side to null (unless already changed)
+            if ($rendezVouse->getClientId() === $this) {
+                $rendezVouse->setClientId(null);
             }
         }
 

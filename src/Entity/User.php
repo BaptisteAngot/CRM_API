@@ -101,6 +101,11 @@ class User implements UserInterface
      */
     private $logs;
 
+    /**
+     * @ORM\OneToMany(targetEntity=RendezVous::class, mappedBy="userIdHost")
+     */
+    private $rendezVouses;
+
     public function __construct()
     {
         $this->disabled = false;
@@ -108,6 +113,7 @@ class User implements UserInterface
         $this->clients = new ArrayCollection();
         $this->gestionTickets = new ArrayCollection();
         $this->logs = new ArrayCollection();
+        $this->rendezVouses = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -373,6 +379,36 @@ class User implements UserInterface
             // set the owning side to null (unless already changed)
             if ($log->getIdUser() === $this) {
                 $log->setIdUser(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|RendezVous[]
+     */
+    public function getRendezVouses(): Collection
+    {
+        return $this->rendezVouses;
+    }
+
+    public function addRendezVouse(RendezVous $rendezVouse): self
+    {
+        if (!$this->rendezVouses->contains($rendezVouse)) {
+            $this->rendezVouses[] = $rendezVouse;
+            $rendezVouse->setUserIdHost($this);
+        }
+
+        return $this;
+    }
+
+    public function removeRendezVouse(RendezVous $rendezVouse): self
+    {
+        if ($this->rendezVouses->removeElement($rendezVouse)) {
+            // set the owning side to null (unless already changed)
+            if ($rendezVouse->getUserIdHost() === $this) {
+                $rendezVouse->setUserIdHost(null);
             }
         }
 
