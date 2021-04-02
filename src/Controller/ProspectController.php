@@ -11,6 +11,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 /**
  * Class ProspectController
  * @package App\Controller
@@ -29,10 +30,11 @@ class ProspectController extends AbstractController
      * @Route("/add", name="prospect_add", methods={"POST"})
      * @param Request $request
      * @param OrigineRepository $origineRepository
+     * @param ValidatorInterface $validator
      * @return JsonResponse
      */
 
-    public  function addProspect(Request $request, OrigineRepository $origineRepository): JsonResponse
+    public  function addProspect(Request $request, OrigineRepository $origineRepository, ValidatorInterface $validator): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
         $errors = [];
@@ -68,8 +70,19 @@ class ProspectController extends AbstractController
         if (!empty($errors)) {
             return new JsonResponse($errors, Response::HTTP_PARTIAL_CONTENT);
         }else {
-            $id = $this->prospectRepository->saveProspect($mail, $nom, $origin , $rgpd, $description,$status);
-            return new JsonResponse(['status' => 'Prospect created!', 'id' => $id], Response::HTTP_CREATED);
+            $response = $this->prospectRepository->saveProspect($mail, $nom, $origin , $rgpd, $description,$status, $validator);
+            if ($response['violation']) {
+                $violation = [];
+                $index = 0;
+                foreach ($response['violation'] as $error) {
+                    $index++;
+                    $violation[$index] = $error->getMessage();
+                }
+                return new JsonResponse(['error' => $violation], Response::HTTP_BAD_REQUEST);
+            }else {
+                return new JsonResponse(['status' => 'Prospect created!', 'id' => $response['id']], Response::HTTP_CREATED);
+            }
+
         }
     }
     /**

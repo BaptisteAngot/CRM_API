@@ -10,6 +10,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use mysql_xdevapi\Exception;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 /**
  * @method Prospect|null find($id, $lockMode = null, $lockVersion = null)
@@ -22,34 +23,43 @@ class ProspectRepository extends ServiceEntityRepository
 {
     private $origineRepository;
 
-    public function __construct(ManagerRegistry $registry,EntityManagerInterface $manager,OrigineRepository $origineRepository)
+    public function __construct(ManagerRegistry $registry, EntityManagerInterface $manager, OrigineRepository $origineRepository)
     {
         parent::__construct($registry, Prospect::class);
         $this->manager = $manager;
         $this->origineRepository = $origineRepository;
     }
-    public function saveProspect($mail, $nom, $origine, $rgpd, $describtion,$status): ?int
-    {
-        $newProspect = new Prospect();
-        $origines =$this->origineRepository->find($origine);
-        if ($origines){
-        $newProspect
-            ->setMail($mail)
-            ->setNom($nom)
-            ->setRgpd($rgpd)
-            ->setOrigine($origines)
-            ->setDescription($describtion)
-            ->setStatus($status)
-            ->setCreatedAt(new DateTime('NOW'))
-            ->setDisabled(false);
 
-        $this->manager->persist($newProspect);
-        $this->manager->flush();
-        }else{
+    public function saveProspect($mail, $nom, $origine, $rgpd, $describtion, $status, $validator)
+    {
+        $tabResponse = [];
+        $newProspect = new Prospect();
+        $origines = $this->origineRepository->find($origine);
+        if ($origines) {
+            $newProspect
+                ->setMail($mail)
+                ->setNom($nom)
+                ->setRgpd($rgpd)
+                ->setOrigine($origines)
+                ->setDescription($describtion)
+                ->setStatus($status)
+                ->setCreatedAt(new DateTime('NOW'))
+                ->setDisabled(false);
+
+            $violation = $validator->validate($newProspect);
+            if (0 !== count($violation)) {
+                $tabResponse['violation'] = $violation;
+            } else {
+                $this->manager->persist($newProspect);
+                $this->manager->flush();
+            }
+        } else {
             throw new NotFoundHttpException('Origine id fail');
         }
-        return $newProspect->getId();
+        $tabResponse['id'] = $newProspect->getId();
+        return $tabResponse;
     }
+
     public function updateProspect(Prospect $prospect): Prospect
     {
         $this->manager->persist($prospect);
@@ -58,6 +68,7 @@ class ProspectRepository extends ServiceEntityRepository
 
         return $prospect;
     }
+
     public function removeProspect(Prospect $prospect)
     {
         $this->manager->remove($prospect);
