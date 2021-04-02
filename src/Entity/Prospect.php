@@ -4,9 +4,11 @@ namespace App\Entity;
 
 use App\Repository\ProspectRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 /**
  * @ORM\Entity(repositoryClass=ProspectRepository::class)
+ * @UniqueEntity(fields={"mail"}, message="Mail must be unique")
  */
 class Prospect
 {
