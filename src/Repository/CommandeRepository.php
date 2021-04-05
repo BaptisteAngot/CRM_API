@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\Commande;
+use App\Entity\ProposedService;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -17,6 +18,20 @@ class CommandeRepository extends ServiceEntityRepository
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Commande::class);
+    }
+    public function saveCommande($numero, $status, $prixTotal, $codePromo, $telephone)
+    {
+        $newCommande = new Commande();
+        $newItem = new ProposedService();
+        $newCommande
+                ->setNumero($numero)
+                ->setStatus($status)
+                ->setPrixTotal($prixTotal)
+                ->setCodePromo($codePromo);
+
+
+        $this->manager->persist($newCommande);
+        $this->manager->flush();
     }
 
     // /**

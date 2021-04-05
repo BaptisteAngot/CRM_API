@@ -16,6 +16,7 @@ use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use JMS\Serializer\SerializerInterface;
 use JMS\Serializer\SerializationContext;
+
 /**
  * Class ClientController
  * @package App\Controller
