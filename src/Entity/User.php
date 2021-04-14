@@ -9,6 +9,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\UserInterface;
 use JMS\Serializer\Annotation as Serializer;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * @ORM\Entity(repositoryClass=UserRepository::class)
@@ -44,6 +45,8 @@ class User implements UserInterface
     /**
      * @ORM\Column(type="string", length=255)
      * @Serializer\Groups({"user"})
+     * @Assert\NotBlank(message="lastName couldn't be blank")
+     * @Assert\NotNull(message="lastName couldn't be null")
      */
     private $lastName;
 
