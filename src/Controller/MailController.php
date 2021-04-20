@@ -143,5 +143,4 @@ class MailController extends AbstractController
         return new JsonResponse(['status' => ' Mail send' . $res], Response::HTTP_CREATED);
     }
 
-
 }
