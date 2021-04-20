@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\User;
 use App\Form\CreateUserFormType;
+use App\Form\UpdateUserFormType;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use JMS\Serializer\SerializerInterface;
@@ -39,6 +40,7 @@ class UserController extends AbstractController
         $this->passwordEncoder = $passwordEncoder;
         $this->jwtController = $jwtController;
     }
+
     /**
      * @Route("/userProfil", name="user_profil", methods={"POST"})
      * @param Request $request
@@ -46,7 +48,7 @@ class UserController extends AbstractController
      * @param SerializerInterface $serializer
      * @return JsonResponse
      */
-    public function getUserProfilFromId(Request $request, UserRepository $userRepository, SerializerInterface $serializer) : JsonResponse
+    public function getUserProfilFromId(Request $request, UserRepository $userRepository, SerializerInterface $serializer): JsonResponse
     {
         $response = new JsonResponse();
         $jwtController = new JWTController();
@@ -54,11 +56,11 @@ class UserController extends AbstractController
         $mail = $jwtController->getUsername($headerAuthorization);
         $user = $userRepository->find($request->request->get("id"));
         if ($user) {
-            if ($user->getEmail() == $mail || $jwtController->checkIfAdmin($headerAuthorization) == true ) {
-                $jsonContent = $this->serializeUser($user,$serializer);
+            if ($user->getEmail() == $mail || $jwtController->checkIfAdmin($headerAuthorization) == true) {
+                $jsonContent = $this->serializeUser($user, $serializer);
                 $response->setContent($jsonContent);
                 $response->setStatusCode(Response::HTTP_OK);
-            }else {
+            } else {
                 $response->setContent(json_encode("NOT AUTHORIZE TO ACCESS TO THIS DATAS"));
                 $response->setStatusCode(Response::HTTP_UNAUTHORIZED);
             }
@@ -68,9 +70,9 @@ class UserController extends AbstractController
         }
     }
 
-    private function serializeUser($objet, SerializerInterface $serializer, $groupe="user"): string
+    private function serializeUser($objet, SerializerInterface $serializer, $groupe = "user"): string
     {
-        return $serializer->serialize($objet,"json", SerializationContext::create()->setGroups(array($groupe)));
+        return $serializer->serialize($objet, "json", SerializationContext::create()->setGroups(array($groupe)));
     }
 
     /**
@@ -99,51 +101,64 @@ class UserController extends AbstractController
             $user->setPassword($this->passwordEncoder->encodePassword($user, $data['password']));
             $entityManager->persist($user);
             $entityManager->flush();
-            return  new JsonResponse("User has been created", Response::HTTP_CREATED);
+            return new JsonResponse("User has been created", Response::HTTP_CREATED);
 
-        }else {
+        } else {
             return new JsonResponse("", Response::HTTP_FORBIDDEN);
         }
     }
 
     /**
-     * @Route("/update", name="update_user", methods={"PUT"})
+     * @Route("/update/{id}", name="update_user", methods={"PUT"})
      * @param Request $request
      * @param UserRepository $userRepository
-     * @param SerializerInterface $serializer
+     * @param ValidatorInterface $validator
+     * @param EntityManagerInterface $entityManager
+     * @param int $id
+     *
      * @return JsonResponse
      */
-    public function updateUser(Request $request,UserRepository $userRepository,SerializerInterface $serializer): JsonResponse
+    public function updateUser(Request $request, UserRepository $userRepository, ValidatorInterface $validator, EntityManagerInterface $entityManager, int $id): JsonResponse
     {
-        $jwtController = new JWTController();
+        $jsonResponse = new JsonResponse();
         $headerAuthorization = $request->headers->get("authorization");
-        $data = json_decode($request->getContent(),true);
-        $mail = $jwtController->getUsername($headerAuthorization);
-        $entityManager = $this->getDoctrine()->getManager();
-        $user = $userRepository->find($data["id"]);
+        $data = json_decode($request->getContent(), true);
+        $mail = $this->jwtController->getUsername($headerAuthorization);
+        $user = $this->getUser();
+        if ($user->getEmail() == $mail || $this->jwtController->checkIfAdmin($headerAuthorization) == true) {
+            if ($user) {
+                $userFromDb = $userRepository->findOneBy(['id' => $id]);
+                $form = $this->createForm(UpdateUserFormType::class, $userFromDb);
+                $form->submit($data);
 
-        if ($user) {
-            if ($user->getEmail() == $mail || $jwtController->checkIfAdmin($headerAuthorization) == true ) {
-                $user = $userRepository->find($data["id"]);
-                isset($data["email"]) && $user->setEmail($data['email']);
-                isset($data["roles"]) && $user->setRoles($data['roles']);
-                isset($data["password"]) && $user->setPassword($data['password']);
-                isset($data["lastName"]) && $user->setLastName($data['lastName']);
-                isset($data["firstName"]) && $user->setFirstName($data['firstName']);
-                isset($data["telephone"]) && $user->setTelephone($data['telephone']);
-                isset($data["fonction"]) && $user->setFonction($data['fonction']);
-                $updatedUser = $this->userRepository->updateUser($user);;
-                return JsonResponse::fromJsonString($this->serializeUser($user,$serializer));}
-                else {
-                    return  JsonResponse::fromJsonString("NOT AUTHORIZE TO ACCESS TO THIS DATAS",Response::HTTP_UNAUTHORIZED);
+                $violations = $validator->validate($userFromDb);
+                if (0 !== count($violations)) {
+                    foreach ($violations as $error) {
+                        $jsonResponse->setContent($error->getMessage());
+                        $jsonResponse->setStatusCode(Response::HTTP_BAD_REQUEST);
+                    }
                 }
+
+                if (isset($data['password'])) {
+                    $userFromDb->setPassword($this->passwordEncoder->encodePassword($userFromDb, $data['password']));
+                }
+                $entityManager->persist($userFromDb);
+                $entityManager->flush();
+
+                $jsonResponse->setContent("User has been updated");
+                $jsonResponse->setStatusCode(Response::HTTP_CREATED);
             } else {
-                return  JsonResponse::fromJsonString("NOT AUTHORIZE TO ACCESS TO THIS DATAS",Response::HTTP_UNAUTHORIZED);
+                $jsonResponse->setContent("NOT AUTHORIZE TO ACCESS TO THIS DATAS");
+                $jsonResponse->setStatusCode(Response::HTTP_UNAUTHORIZED);
             }
-     
+        }else {
+            $jsonResponse->setContent("NOT AUTHORIZE TO ACCESS TO THIS DATAS");
+            $jsonResponse->setStatusCode(Response::HTTP_FORBIDDEN);
+        }
+        return $jsonResponse;
     }
 
-   /**
+    /**
      * @Route("/getAll", name="get_AllUsers", methods={"GET"})
      * @param UserRepository $userRepository
      * @param SerializerInterface $serializer
@@ -160,7 +175,7 @@ class UserController extends AbstractController
                 $filter[$value] = $request->query->get($value);
             }
         }
-        return JsonResponse::fromJsonString($this->serializeUser($userRepository->findBy($filter),$serializer));
+        return JsonResponse::fromJsonString($this->serializeUser($userRepository->findBy($filter), $serializer));
     }
 
 
@@ -178,10 +193,10 @@ class UserController extends AbstractController
             $request->getContent(),
             true
         );
-        
+
         if (isset($datas["id"])) {
             $user = $userRepository->find($datas["id"]);
-         
+
             if ($user === null) {
                 $response->setContent("Ce user n'existe pas");
                 $response->setStatusCode(Response::HTTP_BAD_REQUEST);
