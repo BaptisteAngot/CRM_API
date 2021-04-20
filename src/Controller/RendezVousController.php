@@ -7,8 +7,6 @@ use App\Entity\Client;
 use App\Repository\UserRepository;
 use App\Repository\ClientRepository;
 use App\Repository\ProspectRepository;
-use App\Entity\Prospect;
-use App\Entity\User;
 use App\Repository\RendezVousRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
@@ -16,7 +14,6 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use JMS\Serializer\SerializerInterface;
-use JMS\Serializer\SerializationContext;
 /**
  * Class ClientController
  * @package App\Controller
@@ -26,16 +23,20 @@ class RendezVousController extends AbstractController
 {
     /**
      * @Route("/create", name="create_rendez_vous", methods={"POST"})
-     * @param UserRepository $userRepository
+     * @param Request $request
      * @param ClientRepository $clientRepository
      * @param ProspectRepository $prospectRepository
+     * @param UserRepository $userRepository
      * @param RendezVousRepository $rendezVousRepository
+     * @return Response
+     * @throws \Exception
      */
-    public function createRendezVous(Request $request,ClientRepository $clientRepository, ProspectRepository $prospectRepository ,UserRepository $userRepository, RendezVousRepository $rendezVousRepository)
-        {
+    public function createRendezVous(Request $request,ClientRepository $clientRepository, ProspectRepository $prospectRepository ,UserRepository $userRepository, RendezVousRepository $rendezVousRepository): Response
+    {
             $entityManager = $this->getDoctrine()->getManager();
 
             $newRendezVous = new RendezVous();
+            $response = new Response();
 
             $data = json_decode(
                 $request->getContent(),
@@ -57,8 +58,6 @@ class RendezVousController extends AbstractController
         
                 $entityManager->persist($newRendezVous);
                 $entityManager->flush();
-        
-                $response = new Response();
                 $response->setContent('Saved new commune with id ' . $newRendezVous->getId() );
                 }
             }elseif(isset($data['ProspectId'])) {
@@ -74,8 +73,6 @@ class RendezVousController extends AbstractController
         
                 $entityManager->persist($newRendezVous);
                 $entityManager->flush();
-        
-                $response = new Response();
                 $response->setContent('Saved new commune with id ' . $newRendezVous->getId() );
                 }
 
@@ -86,9 +83,12 @@ class RendezVousController extends AbstractController
 
     /**
      * @Route("/getrendezvous", name="GET_rendez_vous", methods={"GET"})
+     * @param Request $request
      * @param RendezVousRepository $rendezVousRepository
+     * @param SerializerInterface $serializer
+     * @return JsonResponse
      */
-    public function getRendezVousByUser(Request $request,RendezVousRepository $rendezVousRepository,SerializerInterface $serializer)
+    public function getRendezVousByUser(Request $request,RendezVousRepository $rendezVousRepository,SerializerInterface $serializer): JsonResponse
     {
         $user = $this->getUser();
         $rendezVous = $rendezVousRepository->findBy(['userIdHost' => $user->getId()]);
