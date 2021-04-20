@@ -85,7 +85,7 @@ class RendezVousController extends AbstractController
     }
 
     /**
-     * @Route("/getRendezVous", name="GET_rendez_vous", methods={"GET"})
+     * @Route("/getrendezvous", name="GET_rendez_vous", methods={"GET"})
      * @param RendezVousRepository $rendezVousRepository
      */
     public function getRendezVousByUser(Request $request,RendezVousRepository $rendezVousRepository,SerializerInterface $serializer)
@@ -97,5 +97,74 @@ class RendezVousController extends AbstractController
      
     }
 
+    /**
+     * @Route("/update", name="update_rendezvous", methods={"PUT"})
+     * @param RendezVousRepository $rendezVousRepository
+     * @param ClientRepository $clientRepository
+     * @param ProspectRepository $prospectRepository
+     * @param SerializerInterface $serializer
+     */
+    public function updaterendezvous(Request $request,RendezVousRepository $rendezVousRepository,ClientRepository $clientRepository, ProspectRepository $prospectRepository , SerializerInterface $serializer): JsonResponse
+    {
+    
+        $data = json_decode($request->getContent(),true);
+                $entityManager = $this->getDoctrine()->getManager();
+                $rendezVous = $rendezVousRepository->find($data["id"]);
+             
+                isset($data["dateStart"]) && $rendezVous->setDateStart(new \DateTime($data['dateStart']));
+                isset($data["dateEnd"]) && $rendezVous->setDateEnd(new \DateTime($data['dateEnd']));
+                isset($data["description"]) && $rendezVous->setDescription($data['description']);
+                isset($data["userIdHost"]) && $rendezVous->setUserIdHost($data['userIdHost']); 
+                isset($data["invitedMail"]) && $rendezVous->setInvitedMail($data['invitedMail']);
+
+                if(isset($data["clientId"])) {
+                    $client = $clientRepository->find($data['clientId']);
+                    if($client) {
+                       $rendezVous->setClientId($client);
+                    }
+                }
+                if(isset($data["prospectId"])) {
+                    $prospectId = $prospectRepository->find($data['prospectId']);
+                    if($prospectId) {
+                       $rendezVous->setProspectId($prospectId);
+                    }
+                }
+
+                $entityManager->persist($rendezVous);
+                $entityManager->flush();
+                return JsonResponse::fromJsonString($serializer->serialize($rendezVous, 'json'), Response::HTTP_OK);
+    }
+
+    /**
+     * @Route("/delete", name="delete_rendezvous", methods={"DELETE"})
+     * @param Request $request
+     * @param RendezVousRepository $rendezVousRepository
+     * @return Response
+     */
+    public function GameDelete(Request $request, RendezVousRepository $rendezVousRepository)
+    {
+        $entityManager = $this->getDoctrine()->getManager();
+        $response = new Response();
+        $data = json_decode(
+            $request->getContent(),
+            true
+        );
+        if (isset($data["id"])) {
+            $rendezvous = $rendezVousRepository->find($data["id"]);
+            if ($rendezvous === null) {
+                $response->setContent("Ce rendezvous n'existe pas" + $game);
+                $response->setStatusCode(Response::HTTP_BAD_REQUEST);
+            } else {
+                $entityManager->remove($rendezvous);
+                $entityManager->flush();
+                $response->setContent("Ce rendezvous à était supprimé");
+                $response->setStatusCode(Response::HTTP_OK);
+            }
+        } else {
+            $response->setContent("L'id n'est pas renseigné");
+            $response->setStatusCode(Response::HTTP_BAD_REQUEST);
+        }
+        return $response;
+    }
 
 }
