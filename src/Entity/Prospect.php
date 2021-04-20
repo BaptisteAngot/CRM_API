@@ -69,6 +69,7 @@ class Prospect
 
     /**
      * @ORM\OneToMany(targetEntity=RendezVous::class, mappedBy="prospectId")
+        * @ORM\JoinColumn(nullable=false)
      */
     private $rendezVouses;
 

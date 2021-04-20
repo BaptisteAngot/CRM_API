@@ -81,6 +81,7 @@ class Client
 
     /**
      * @ORM\OneToMany(targetEntity=RendezVous::class, mappedBy="clientId")
+        * @ORM\JoinColumn(nullable=false)
      */
     private $rendezVouses;
 
