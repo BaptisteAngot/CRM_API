@@ -24,18 +24,22 @@ use JMS\Serializer\SerializationContext;
  */
 class RendezVousController extends AbstractController
 {
-    /**
+  /**
      * @Route("/create", name="create_rendez_vous", methods={"POST"})
-     * @param UserRepository $userRepository
+     * @param Request $request
      * @param ClientRepository $clientRepository
      * @param ProspectRepository $prospectRepository
+     * @param UserRepository $userRepository
      * @param RendezVousRepository $rendezVousRepository
+     * @return Response
+     * @throws \Exception
      */
-    public function createRendezVous(Request $request,ClientRepository $clientRepository, ProspectRepository $prospectRepository ,UserRepository $userRepository, RendezVousRepository $rendezVousRepository)
-        {
+    public function createRendezVous(Request $request,ClientRepository $clientRepository, ProspectRepository $prospectRepository ,UserRepository $userRepository, RendezVousRepository $rendezVousRepository): Response
+    {
             $entityManager = $this->getDoctrine()->getManager();
 
             $newRendezVous = new RendezVous();
+            $response = new Response();
 
             $data = json_decode(
                 $request->getContent(),
@@ -57,8 +61,6 @@ class RendezVousController extends AbstractController
         
                 $entityManager->persist($newRendezVous);
                 $entityManager->flush();
-        
-                $response = new Response();
                 $response->setContent('Saved new commune with id ' . $newRendezVous->getId() );
                 }
             }elseif(isset($data['ProspectId'])) {
@@ -74,8 +76,6 @@ class RendezVousController extends AbstractController
         
                 $entityManager->persist($newRendezVous);
                 $entityManager->flush();
-        
-                $response = new Response();
                 $response->setContent('Saved new commune with id ' . $newRendezVous->getId() );
                 }
 
@@ -83,6 +83,7 @@ class RendezVousController extends AbstractController
             return $response;
 
     }
+
 
     /**
      * @Route("/getrendezvous", name="GET_rendez_vous", methods={"GET"})
