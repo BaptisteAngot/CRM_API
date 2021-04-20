@@ -3,7 +3,9 @@
 namespace App\Controller;
 
 use App\Entity\User;
+use App\Form\CreateUserFormType;
 use App\Repository\UserRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use JMS\Serializer\SerializerInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Serializer\Serializer;
@@ -17,6 +19,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use JMS\Serializer\SerializationContext;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 
 /**
@@ -27,10 +30,14 @@ use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 class UserController extends AbstractController
 {
     private $userRepository;
+    private $passwordEncoder;
+    private $jwtController;
 
-    public function __construct(UserRepository $userRepository)
+    public function __construct(UserRepository $userRepository, UserPasswordEncoderInterface $passwordEncoder, JWTController $jwtController)
     {
         $this->userRepository = $userRepository;
+        $this->passwordEncoder = $passwordEncoder;
+        $this->jwtController = $jwtController;
     }
     /**
      * @Route("/userProfil", name="user_profil", methods={"POST"})
@@ -68,32 +75,35 @@ class UserController extends AbstractController
 
     /**
      * @Route("/create", name="create_user", methods={"POST"})
-     * @param UserPasswordEncoderInterface $passwordEncoder
-     * @param UserRepository $userRepository
+     * @param EntityManagerInterface $entityManager
      * @param Request $request
+     * @param ValidatorInterface $validator
+     * @param UserPasswordEncoderInterface $encoder
      * @return JsonResponse
      */
-    public function createUser(UserPasswordEncoderInterface $passwordEncoder,UserRepository $userRepository, Request $request): JsonResponse
+    public function createUser(EntityManagerInterface $entityManager, Request $request, ValidatorInterface $validator, UserPasswordEncoderInterface $encoder): JsonResponse
     {
-        $jwtController = new JWTController();
         $headerAuthorization = $request->headers->get("authorization");
         $data = json_decode($request->getContent(), true);
-        $email = $data['email'];
-        $roles = $data['roles'];
-        $password = $data['password'];
-        $lastName = $data['lastName'];
-        $firstName = $data['firstName'];
-        $telephone = $data['telephone'];
-        $fonction = $data["fonction"];
-        $rgpd = $data["rgpd"];
+        if ($this->jwtController->checkIfAdmin($headerAuthorization)) {
+            $user = new User();
+            $form = $this->createForm(CreateUserFormType::class, $user);
+            $form->submit($data);
 
-        if (empty($email) || empty($roles) || empty($password)|| empty($lastName) || empty($firstName) || empty($telephone) || empty($fonction) || $jwtController->checkIfAdmin($headerAuthorization) == false || (empty($rgpd) || $rgpd=false) ) {
-            throw new NotFoundHttpException('Expecting mandatory parameters!');
-        } else {
-            $this->userRepository->saveUser($email, $roles, $password, $lastName, $firstName, $telephone, $fonction, $rgpd);
-            return new JsonResponse(['status' => 'Customer created!'], Response::HTTP_CREATED);
-        } 
+            $violation = $validator->validate($user);
+            if (0 !== count($violation)) {
+                foreach ($violation as $error) {
+                    return new JsonResponse($error->getMessage(), Response::HTTP_BAD_REQUEST);
+                }
+            }
+            $user->setPassword($this->passwordEncoder->encodePassword($user, $data['password']));
+            $entityManager->persist($user);
+            $entityManager->flush();
+            return  new JsonResponse("User has been created", Response::HTTP_CREATED);
 
+        }else {
+            return new JsonResponse("", Response::HTTP_FORBIDDEN);
+        }
     }
 
     /**

@@ -5,6 +5,8 @@ namespace App\Repository;
 use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Symfony\Component\Security\Core\Encoder\PasswordEncoderInterface;
+use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
 use Symfony\Component\Security\Core\User\PasswordUpgraderInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -17,10 +19,13 @@ use Doctrine\ORM\EntityManagerInterface;
  */
 class UserRepository extends ServiceEntityRepository implements PasswordUpgraderInterface
 {
-    public function __construct(ManagerRegistry $registry, EntityManagerInterface $manager)
+    private $passwordEncoder;
+
+    public function __construct(ManagerRegistry $registry, EntityManagerInterface $manager, UserPasswordEncoderInterface $passwordEncoder)
     {
         parent::__construct($registry, User::class);
         $this->manager = $manager;
+        $this->passwordEncoder = $passwordEncoder;
     }
 
     /**
@@ -43,12 +48,14 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         $newUser
                 ->setEmail($email)
                 ->setRoles($roles)
-                ->setPassword($password)
+                ->setPassword($this->passwordEncoder->encodePassword($newUser,$password))
                 ->setLastName($lastName)
                 ->setFirstName($firstName)
                 ->setTelephone($telephone)
                 ->setFonction($fonction)
-                ->setRgpd($rgpd);
+                ->setRgpd($rgpd)
+                ->setUpdatedAt(new \DateTime('NOW'));
+
 
         $this->manager->persist($newUser);
         $this->manager->flush();
