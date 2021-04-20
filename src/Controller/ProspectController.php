@@ -71,7 +71,7 @@ class ProspectController extends AbstractController
             return new JsonResponse($errors, Response::HTTP_PARTIAL_CONTENT);
         }else {
             $response = $this->prospectRepository->saveProspect($mail, $nom, $origin , $rgpd, $description,$status, $validator);
-            if ($response['violation']) {
+            if (isset($response['violation'])) {
                 $violation = [];
                 $index = 0;
                 foreach ($response['violation'] as $error) {
