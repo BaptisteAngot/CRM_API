@@ -85,7 +85,7 @@ class RendezVousController extends AbstractController
     }
 
     /**
-     * @Route("/getRendezVous", name="GET_rendez_vous", methods={"GET"})
+     * @Route("/getrendezvous", name="GET_rendez_vous", methods={"GET"})
      * @param RendezVousRepository $rendezVousRepository
      */
     public function getRendezVousByUser(Request $request,RendezVousRepository $rendezVousRepository,SerializerInterface $serializer)
