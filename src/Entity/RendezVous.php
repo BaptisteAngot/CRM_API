@@ -39,11 +39,13 @@ class RendezVous
 
     /**
      * @ORM\ManyToOne(targetEntity=Client::class, inversedBy="rendezVouses")
+     * @ORM\JoinColumn(nullable=true)
      */
     private $clientId;
 
     /**
      * @ORM\ManyToOne(targetEntity=Prospect::class, inversedBy="rendezVouses")
+     * @ORM\JoinColumn(nullable=true)
      */
     private $prospectId;
 
