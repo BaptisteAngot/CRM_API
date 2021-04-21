@@ -189,7 +189,7 @@ class RendezVousController extends AbstractController
      * @param RendezVousRepository $rendezVousRepository
      * @return Response
      */
-    public function GameDelete(Request $request, RendezVousRepository $rendezVousRepository)
+    public function RDVDelete(Request $request, RendezVousRepository $rendezVousRepository)
     {
         $entityManager = $this->getDoctrine()->getManager();
         $response = new Response();
@@ -200,7 +200,7 @@ class RendezVousController extends AbstractController
         if (isset($data["id"])) {
             $rendezvous = $rendezVousRepository->find($data["id"]);
             if ($rendezvous === null) {
-                $response->setContent("Ce rendezvous n'existe pas" + $game);
+                $response->setContent("Ce rendezvous n'existe pas" . $rendezvous);
                 $response->setStatusCode(Response::HTTP_BAD_REQUEST);
             } else {
                 $entityManager->remove($rendezvous);
