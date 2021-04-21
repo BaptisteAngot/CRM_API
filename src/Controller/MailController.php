@@ -70,6 +70,7 @@ class MailController extends AbstractController
 
 
     }
+
     /**
      * @Route("/client", name="mail_client", methods={"POST"})
      *  @param Request $request
@@ -142,6 +143,5 @@ class MailController extends AbstractController
 
         return new JsonResponse(['status' => ' Mail send' . $res], Response::HTTP_CREATED);
     }
-
 
 }
