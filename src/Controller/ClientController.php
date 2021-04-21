@@ -81,26 +81,35 @@ class ClientController extends AbstractController
                 $updatedUser = $this->clientRepository->updateClient($client);
                 return JsonResponse::fromJsonString($this->serializeUser($client,$serializer));
     }
-              
-     
+
+
     /**
      * @Route("/getAll", name="get_AllClient", methods={"GET"})
      * @param ClientRepository $clientRepository
-     * @param SerializerInterface $serializer
      * @param Request $request
+     * @param SerializerInterface $serializer
+     * @param UserRepository $userRepository
      * @return Response
      */
-    public function clientJson(ClientRepository $clientRepository, Request $request,SerializerInterface $serializer)
+    public function clientJson(ClientRepository $clientRepository, Request $request,SerializerInterface $serializer, UserRepository $userRepository)
     {
-        $filter = [];
-        $em = $this->getDoctrine()->getManager();
-        $metadata = $em->getClassMetadata(Client::class)->getFieldNames();
-        foreach ($metadata as $value) {
-            if ($request->query->get($value)) {
-                $filter[$value] = $request->query->get($value);
-            }
+        $response = new JsonResponse();
+//        $jwtController = new JWTController();
+        $user = $this->getUser();
+//        $headerAuthorization = $request->headers->get("authorization");
+        if ($user) {
+//            if ($jwtController->checkIfAdmin($headerAuthorization) == true) {
+                $clients = $clientRepository->findAll();
+//            }else {
+//                $userFromDB = $userRepository->find($user->getId());
+//                $clients = $clientRepository->findBy(['id_users' => $userFromDB->getId()]);
+//            }
+            $response->setContent($serializer->serialize($clients, 'json'));
+            $response->setStatusCode(Response::HTTP_OK);
+        }else {
+            $response->setStatusCode(Response::HTTP_NOT_FOUND);
         }
-        return JsonResponse::fromJsonString($this->serializeUser($clientRepository->findBy($filter), $serializer));
+        return $response;
     }
       /**
      * @Route("/disable", name="disable_client", methods={"PUT"})
