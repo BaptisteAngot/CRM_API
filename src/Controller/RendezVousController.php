@@ -67,7 +67,6 @@ class RendezVousController extends AbstractController
                  $end  = date_format($newRendezVous->getDateEnd(),'y-M-d  H:m:s');
                  $description  = $newRendezVous->getDescription();
 
-
                     $swiftmsg = new \Swift_Message('Prise de Rendez-Vous'.$start);
                     $swiftmsg->setFrom("crmwebpartener@gmail.com");
                     $swiftmsg->setTo($mail);

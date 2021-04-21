@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Repository\OrigineRepository;
 use App\Entity\Prospect;
 use App\Repository\ProspectRepository;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -34,7 +35,7 @@ class ProspectController extends AbstractController
      * @return JsonResponse
      */
 
-    public  function addProspect(Request $request, OrigineRepository $origineRepository, ValidatorInterface $validator): JsonResponse
+    public  function addProspect(Request $request, OrigineRepository $origineRepository, ValidatorInterface $validator,ProspectRepository $prospectRepository, LoggerInterface $logger, \Swift_Mailer $mailer): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
         $errors = [];
@@ -80,7 +81,21 @@ class ProspectController extends AbstractController
                 }
                 return new JsonResponse(['error' => $violation], Response::HTTP_BAD_REQUEST);
             }else {
+                if (!empty($propect = $prospectRepository->find($response['id']))) {
+                    $mail = $propect->getMail();
+
+                    $swiftmsg = new \Swift_Message('Bienvenu');
+                    $swiftmsg->setFrom("crmwebpartener@gmail.com");
+                    $swiftmsg->setTo($mail);
+                    $swiftmsg->setBody(
+                        $this->renderView('mail/mailProspect.html.twig'), 'text/html', 'utf-8');
+                    $mailer->send($swiftmsg);
+                    $logger->info('email sent');
+                    $this->addFlash('notice', 'Email sent');
+                    return new JsonResponse(['status' => 'Prospect created + mailed', 'id' => $response['id']], Response::HTTP_CREATED);
+                }
                 return new JsonResponse(['status' => 'Prospect created!', 'id' => $response['id']], Response::HTTP_CREATED);
+
             }
 
         }

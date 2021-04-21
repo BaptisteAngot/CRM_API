@@ -70,6 +70,7 @@ class MailController extends AbstractController
 
 
     }
+
     /**
      * @Route("/client", name="mail_client", methods={"POST"})
      *  @param Request $request

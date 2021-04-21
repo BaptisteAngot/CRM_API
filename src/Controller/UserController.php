@@ -5,9 +5,11 @@ namespace App\Controller;
 use App\Entity\User;
 use App\Form\CreateUserFormType;
 use App\Form\UpdateUserFormType;
+use App\Repository\ProspectRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use JMS\Serializer\SerializerInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
@@ -83,7 +85,7 @@ class UserController extends AbstractController
      * @param UserPasswordEncoderInterface $encoder
      * @return JsonResponse
      */
-    public function createUser(EntityManagerInterface $entityManager, Request $request, ValidatorInterface $validator, UserPasswordEncoderInterface $encoder): JsonResponse
+    public function createUser(EntityManagerInterface $entityManager, Request $request, ValidatorInterface $validator, UserPasswordEncoderInterface $encoder,UserRepository $userRepository, LoggerInterface $logger, \Swift_Mailer $mailer): JsonResponse
     {
         $headerAuthorization = $request->headers->get("authorization");
         $data = json_decode($request->getContent(), true);
@@ -101,6 +103,23 @@ class UserController extends AbstractController
             $user->setPassword($this->passwordEncoder->encodePassword($user, $data['password']));
             $entityManager->persist($user);
             $entityManager->flush();
+
+                $mail = $data['email'];
+
+                $swiftmsg = new \Swift_Message('Bienvenu');
+                $swiftmsg->setFrom("crmwebpartener@gmail.com");
+                $swiftmsg->setTo($mail);
+                $swiftmsg->setBody(
+                    $this->renderView('mail/mailClient.html.twig'), 'text/html', 'utf-8');
+                $mailer->send($swiftmsg);
+                $logger->info('email sent');
+            $swiftmsg2 = new \Swift_Message('Client enregistré');
+            $swiftmsg2->setFrom("crmwebpartener@gmail.com");
+            $swiftmsg2->setTo("crmwebpartener@gmail.com");
+            $swiftmsg2->setBody(
+                $this->renderView('mail/mailUserCreate.html.twig'), 'text/html', 'utf-8');
+            $mailer->send($swiftmsg2);
+            $logger->info('email sent');
             return new JsonResponse("User has been created", Response::HTTP_CREATED);
 
         } else {
