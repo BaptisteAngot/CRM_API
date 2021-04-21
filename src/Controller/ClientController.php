@@ -94,16 +94,16 @@ class ClientController extends AbstractController
     public function clientJson(ClientRepository $clientRepository, Request $request,SerializerInterface $serializer, UserRepository $userRepository)
     {
         $response = new JsonResponse();
-//        $jwtController = new JWTController();
+       $jwtController = new JWTController();
         $user = $this->getUser();
-//        $headerAuthorization = $request->headers->get("authorization");
+       $headerAuthorization = $request->headers->get("authorization");
         if ($user) {
-//            if ($jwtController->checkIfAdmin($headerAuthorization) == true) {
+           if ($jwtController->checkIfAdmin($headerAuthorization) == true) {
                 $clients = $clientRepository->findAll();
-//            }else {
-//                $userFromDB = $userRepository->find($user->getId());
-//                $clients = $clientRepository->findBy(['id_users' => $userFromDB->getId()]);
-//            }
+           }else {
+               $userFromDB = $userRepository->find($user->getId());
+               $clients = $userFromDB->getClients();
+           }
             $response->setContent($serializer->serialize($clients, 'json'));
             $response->setStatusCode(Response::HTTP_OK);
         }else {
