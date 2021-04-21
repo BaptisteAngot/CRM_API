@@ -84,18 +84,65 @@ class RendezVousController extends AbstractController
 
     /**
      * @Route("/getrendezvous", name="GET_rendez_vous", methods={"GET"})
-     * @param Request $request
      * @param RendezVousRepository $rendezVousRepository
      * @param SerializerInterface $serializer
      * @return JsonResponse
      */
-    public function getRendezVousByUser(Request $request,RendezVousRepository $rendezVousRepository,SerializerInterface $serializer): JsonResponse
+    public function getRendezVousByUser(RendezVousRepository $rendezVousRepository,SerializerInterface $serializer): JsonResponse
     {
         $user = $this->getUser();
         $rendezVous = $rendezVousRepository->findBy(['userIdHost' => $user->getId()]);
 
         return JsonResponse::fromJsonString($serializer->serialize($rendezVous, 'json'), Response::HTTP_OK);
      
+    }
+
+    /**
+     * @Route("/getrendezvousProspect/{idProspect}", name="rdvUserProspect", methods={"GET"})
+     * @param int $idProspect
+     * @param RendezVousRepository $rendezVousRepository
+     * @param SerializerInterface $serializer
+     * @param ProspectRepository $prospectRepository
+     * @return JsonResponse
+     */
+    public function getRendezByUserAndProspect(int $idProspect, RendezVousRepository $rendezVousRepository,SerializerInterface $serializer, ProspectRepository  $prospectRepository): JsonResponse
+    {
+        $user = $this->getUser();
+        $prospect = $prospectRepository->find($idProspect);
+        $jsonResponse = new JsonResponse();
+        if ($prospect) {
+            $rendezVous = $rendezVousRepository->findBy(['userIdHost' => $user->getId(), 'prospectId' => $prospect]);
+            $jsonResponse->setContent($serializer->serialize($rendezVous, 'json'));
+            $jsonResponse->setStatusCode(Response::HTTP_OK);
+        }else {
+            $jsonResponse->setContent("Error, prospect don't exist");
+            $jsonResponse->setStatusCode(Response::HTTP_NOT_FOUND);
+        }
+        return $jsonResponse;
+    }
+
+    /**
+     * @Route("/getrendezvousClient/{idClient}", name="rdvUserClient", methods={"GET"})
+     * @param int $idProspect
+     * @param RendezVousRepository $rendezVousRepository
+     * @param SerializerInterface $serializer
+     * @param ProspectRepository $prospectRepository
+     * @return JsonResponse
+     */
+    public function getRendezByUserAndClient(int $idClient, RendezVousRepository $rendezVousRepository,SerializerInterface $serializer, ClientRepository  $clientRepository): JsonResponse
+    {
+        $user = $this->getUser();
+        $client = $clientRepository->find($idClient);
+        $jsonResponse = new JsonResponse();
+        if ($client) {
+            $rendezVous = $rendezVousRepository->findBy(['userIdHost' => $user->getId(), 'clientId' => $client]);
+            $jsonResponse->setContent($serializer->serialize($rendezVous, 'json'));
+            $jsonResponse->setStatusCode(Response::HTTP_OK);
+        }else {
+            $jsonResponse->setContent("Error, client don't exist");
+            $jsonResponse->setStatusCode(Response::HTTP_NOT_FOUND);
+        }
+        return $jsonResponse;
     }
 
     /**
