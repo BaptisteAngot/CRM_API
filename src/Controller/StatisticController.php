@@ -46,7 +46,7 @@ class StatisticController extends AbstractController
     }
 
     /**
-     * @Route("/prospectsStat", name="getProspects")
+     * @Route("/prospectsStat", name="getProspectsStats")
      */
     public function getProspectStat(ProspectRepository $prospectRepository) {
         $prospectHard = $prospectRepository->findBy(['status' => "CHAUD"]);
