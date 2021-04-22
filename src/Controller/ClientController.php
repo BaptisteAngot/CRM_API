@@ -50,38 +50,41 @@ class ClientController extends AbstractController
         $prenom = $data['prenom'];
         $fonction = $data['fonction'];
         $telephone = $data['telephone'];
+        $rgpd = $data['rgpd'];
 
-            if (empty($mail) || empty($nom) || empty($prenom)|| empty($fonction) || empty($telephone)) {
+            if (empty($mail) || empty($nom) || empty($prenom)|| empty($fonction) || empty($telephone) || empty($rgpd)) {
                 throw new NotFoundHttpException('Expecting mandatory parameters!');
             } else {
-                $this->clientRepository->saveClient($mail, $nom, $prenom, $fonction, $telephone);
+                $this->clientRepository->saveClient($mail, $nom, $prenom, $fonction, $telephone, $rgpd);
                 return new JsonResponse(['status' => 'Customer created!'], Response::HTTP_CREATED);
             } 
     
     }
 
     /**
-     * @Route("/update", name="update_client", methods={"PUT"})
+     * @Route("/update/{id}", name="update_client", methods={"PUT"})
+     * @param $id
      * @param ClientRepository $clientRepository
      * @param SerializerInterface $serializer
      */
-    public function updateClient(Request $request,ClientRepository $clientRepository,SerializerInterface $serializer): JsonResponse
+    public function updateClient($id, Request $request,ClientRepository $clientRepository,SerializerInterface $serializer): JsonResponse
     {
     
         $data = json_decode($request->getContent(),true);
                 $entityManager = $this->getDoctrine()->getManager();
-                $client = $clientRepository->find($data["id"]);
+                $client = $clientRepository->findOneBy(['id' => $id]);
                 isset($data["mail"]) && $client->setMail($data['mail']);
                 isset($data["nom"]) && $client->setNom($data['nom']);
                 isset($data["prenom"]) && $client->setPrenom($data['prenom']);
                 isset($data["fonction"]) && $client->setFonction($data['fonction']);
                 isset($data["telephone"]) && $client->setTelephone($data['telephone']);
+                isset($data["disabled"]) && $client->setDisabled($data['disabled']);
+
                 $client->setUpdatedAt(new \DateTime('now', new \DateTimeZone('Europe/Paris')));
         
                 $updatedUser = $this->clientRepository->updateClient($client);
                 return JsonResponse::fromJsonString($this->serializeUser($client,$serializer));
     }
-
 
     /**
      * @Route("/getAll", name="get_AllClient", methods={"GET"})
@@ -111,38 +114,55 @@ class ClientController extends AbstractController
         }
         return $response;
     }
-      /**
-     * @Route("/disable", name="disable_client", methods={"PUT"})
-     * @param Request $request
+
+     /**
+     * @Route("/{id}", name="get_one_client", methods={"GET"})
+     * @param $id
      * @param ClientRepository $clientRepository
-     * @return Response
+     * @return JsonResponse
      */
-    public function disabledClient(Request $request, ClientRepository $clientRepository)
+    public function getClientID($id, ClientRepository $clientRepository): JsonResponse
     {
-        $entityManager = $this->getDoctrine()->getManager();
-        $response = new Response();
-        $datas = json_decode(
-            $request->getContent(),
-            true
-        );
-        
-        if (isset($datas["id"])) {
-            $client = $clientRepository->find($datas["id"]);
-         
-            if ($client === null) {
-                $response->setContent("Ce user n'existe pas");
-                $response->setStatusCode(Response::HTTP_BAD_REQUEST);
-            } else {
-                $client->setDisabled(true);
-                $entityManager->persist($client);
-                $entityManager->flush();
-                $response->setStatusCode(Response::HTTP_OK);
-            }
-        } else {
-            $response->setContent("L'id n'est pas renseigné");
-            $response->setStatusCode(Response::HTTP_BAD_REQUEST);
+        $client = $this->clientRepository->findOneBy(['id' => $id]);
+        if ($client) {
+
+            $data = [
+                'id' => $client->getId(),
+                'mail' => $client->getMail(),
+                'nom' => $client->getNom(),
+                'prenom' => $client->getPrenom(),
+                'fonction' => $client->getFonction(),
+                'telephone' => $client->getTelephone(),
+                'rgpd' => $client->getRgpd(),
+                'created_at' => $client->getCreatedAt(),
+                'updated_at' => $client->getupdatedAt(),
+                'disabled' => $client->getDisabled()
+            ];
+
+            return new JsonResponse($data, Response::HTTP_OK);
+        }else{
+            throw new NotFoundHttpException('Expecting mandatory parameters!');
         }
-        return $response;
+    }
+
+    /**
+     * @Route("/disabled/{id}", name="disabled_client", methods={"POST"})
+     * @param $id
+     * @param ClientRepository $clientRepository
+     * @return JsonResponse
+     */
+    public function disabledClient($id, ClientRepository $clientRepository): JsonResponse
+    {
+        $client = $this->clientRepository->findOneBy(['id' => $id]);
+        if ($client) {
+            $client->setDisabled(true);
+            $entityManager = $this->getDoctrine()->getManager();
+            $entityManager->flush();
+
+            return new JsonResponse("client at id " . $client->getId() . " is now disabled", Response::HTTP_OK);
+        }else {
+            return new JsonResponse("client don't exist", Response::HTTP_NOT_FOUND);
+        }
     }
 
 }
