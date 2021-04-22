@@ -20,7 +20,7 @@ class ClientRepository extends ServiceEntityRepository
         $this->manager = $manager;
     }
 
-    public function saveClient($mail, $nom, $prenom, $fonction, $telephone, $rgpd)
+    public function saveClient($mail, $nom, $prenom, $fonction, $telephone, $rgpd, $idUser)
     {
         $newClient = new Client();
         $newClient
@@ -29,7 +29,8 @@ class ClientRepository extends ServiceEntityRepository
                 ->setPrenom($prenom)
                 ->setFonction($fonction)
                 ->setTelephone($telephone)
-                ->setRgpd($rgpd);
+                ->setRgpd($rgpd)
+                ->addIdUser($idUser);
 
 
         $this->manager->persist($newClient);
