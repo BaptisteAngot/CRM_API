@@ -197,6 +197,36 @@ class UserController extends AbstractController
         return JsonResponse::fromJsonString($this->serializeUser($userRepository->findBy($filter), $serializer));
     }
 
+      /**
+     * @Route("/{id}", name="get_one_user", methods={"GET"})
+     * @param $id
+     * @param UserRepository $userRepository
+     * @return JsonResponse
+     */
+    public function getUserId($id, UserRepository $userRepository): JsonResponse
+    {
+        $user = $this->userRepository->findOneBy(['id' => $id]);
+        if ($user) {
+
+            $data = [
+                'id' => $user->getId(),
+                'email' => $user->getEmail(),
+                'last_name' => $user->getLastName(),
+                'first_name' => $user->getFirstName(),
+                'fonction' => $user->getFonction(),
+                'telephone' => $user->getTelephone(),
+                'rgpd' => $user->getRgpd(),
+                'created_at' => $user->getCreatedAt(),
+                'updated_at' => $user->getupdatedAt(),
+                'disabled' => $user->getDisabled()
+            ];
+
+            return new JsonResponse($data, Response::HTTP_OK);
+        }else{
+            throw new NotFoundHttpException('Expecting mandatory parameters!');
+        }
+    }
+
 
     /**
      * @Route("/disable", name="disabled_user", methods={"PUT"})
