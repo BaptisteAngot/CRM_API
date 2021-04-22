@@ -6,6 +6,7 @@ use App\Entity\Origine;
 use App\Entity\Prospect;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
+use Faker\Factory;
 
 class ProspectFixtures extends Fixture
 {
@@ -14,6 +15,7 @@ class ProspectFixtures extends Fixture
     }
     public function load(ObjectManager $manager)
     {
+        $faker = Factory::create();
         $propect = new Prospect();
         $origine = new Origine();
         $origine
@@ -27,8 +29,8 @@ class ProspectFixtures extends Fixture
         $manager->persist($origine2);
 
             $propect
-                ->setMail("propect@mail.md")
-                ->setNom("PropectName")
+                ->setMail($faker->email)
+                ->setNom($faker->name)
                 ->setOrigine($origine)
                 ->setRgpd(true)
                 ->setStatus("CHAUD")
