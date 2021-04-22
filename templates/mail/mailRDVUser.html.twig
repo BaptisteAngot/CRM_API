@@ -1,0 +1,26 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Rendez-Vous avec un Client !{% endblock %}
+
+{% block body %}
+    <style>
+        .example-wrapper { margin: 1em auto; max-width: 800px; width: 95%; font: 18px/1.5 sans-serif; }
+        .example-wrapper code { background: #F5F5F5; padding: 2px 6px; }
+    </style>
+
+    <div class="example-wrapper">
+        <h1>Confirmation  du rendez-vous avec {{ client }}  :white_check_mark:</h1>
+
+        <div class="row">
+            <div class="col-sm">
+                DEBUT : {{ dateStart }}
+            </div>
+            <div class="col-sm">
+                FIN    :  {{ dateEnd }}
+            </div>
+            <div class="col-sm">
+                {{ description }}
+            </div>
+        </div>
+    </div>
+{% endblock %}

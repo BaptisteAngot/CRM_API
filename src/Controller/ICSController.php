@@ -13,7 +13,7 @@ class ICSController extends AbstractController
      * @param $description
      * @param string $location
      */
-    public function createICSFile($meetingStart, $meetingEnd, $userName, $description, $location="") {
+    public function createICSFile($meetingStart, $meetingEnd, $userName, $description, $location="24 PLACE ST MARC 76000 ROUEN") {
         $tmp = $_ENV['SERVER'];
         $fs = new Filesystem();
         $fileName = "meeting.ics";
@@ -26,14 +26,14 @@ BEGIN:VEVENT
 DTSTART:".date('Ymd\THis', strtotime($meetingStart))."
 DTEND:".date('Ymd\THis', strtotime($meetingEnd))."
 DTSTAMP:".date('Ymd\THis', strtotime($meetingStart))."
-ORGANIZER;CN=XYZ:mailto:do-not-reply@CRMStMarc.com
+ORGANIZER;CN=XYZ:mailto:crmwebpartener@gmail.com
 UID:".rand(5, 1500)."
 ATTENDEE;PARTSTAT=NEEDS-ACTION;RSVP= TRUE;CN=Sample:emailaddress@testemail.com
 DESCRIPTION:". $description . "
 LOCATION: " . $location . "
 SEQUENCE:0
 STATUS:CONFIRMED
-SUMMARY:Meeting has been scheduled by ".$userName."
+SUMMARY: Rendez-vous organisé par ".$userName."
 TRANSP:OPAQUE
 END:VEVENT
 END:VCALENDAR";
