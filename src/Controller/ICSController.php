@@ -27,7 +27,7 @@ BEGIN:VEVENT
 DTSTART:".date('Ymd\THis', strtotime($meetingStart))."
 DTEND:".date('Ymd\THis', strtotime($meetingEnd))."
 DTSTAMP:".date('Ymd\THis', strtotime($meetingStart))."
-ORGANIZER;CN=XYZ:mailto:crmwebpartener@gmail.com
+ORGANIZER;CN=CRM:mailto:crmwebpartener@gmail.com
 UID:".rand(5, 1500)."
 ATTENDEE;PARTSTAT=NEEDS-ACTION;RSVP= TRUE;CN=Sample:crmwebpartener@gmail.com
 DESCRIPTION:". $description . "
