@@ -39,6 +39,7 @@ class RendezVousController extends AbstractController
             $newRendezVous = new RendezVous();
             $newMailRDV = new MailController();
             $response = new Response();
+            $icsController = new ICSController();
 
             $data = json_decode(
                 $request->getContent(),
@@ -62,7 +63,10 @@ class RendezVousController extends AbstractController
 
                 $entityManager->persist($newRendezVous);
                 $entityManager->flush();
-                $mail = $clientId->getMail();
+
+                $icsController->createICSFile($data['dateStart'],$data['dateEnd'], $this->getUser()->getUsername(),$data["description"]);
+
+                 $mail = $clientId->getMail();
                  $start  = date_format($newRendezVous->getDateStart(),'y-M-d  H:m:s');
                  $end  = date_format($newRendezVous->getDateEnd(),'y-M-d  H:m:s');
                  $description  = $newRendezVous->getDescription();
@@ -71,14 +75,15 @@ class RendezVousController extends AbstractController
                     $swiftmsg->setFrom("crmwebpartener@gmail.com");
                     $swiftmsg->setTo($mail);
                     $swiftmsg->setBody(
-                        $this->renderView('mail/mailRDV.html.twig', ['dateStart' => $start, 'dateEnd'=>$end,'description'=>$description]), 'text/html', 'utf-8');
-
+                        $this->renderView('mail/mailRDVClient.html.twig', ['dateStart' => $start, 'dateEnd'=>$end,'description'=>$description]), 'text/html', 'utf-8')
+                        ->attach(\Swift_Attachment::fromPath('../public/tmp/meeting.ics'));
+                    ;
                     $mailer->send($swiftmsg);
                     $logger->info('email sent');
                     $this->addFlash('notice', 'Email sent');
 
                 $response = new Response();
-                $response->setContent('Saved new commune with id ' . $newRendezVous->getId() );
+                $response->setContent('Create rendez-vous with id ' . $newRendezVous->getId() );
                 }
             }elseif(isset($data['ProspectId'])) {
                 if($ProspectId = $prospectRepository->find($data['ProspectId'])) {
@@ -93,7 +98,34 @@ class RendezVousController extends AbstractController
 
                 $entityManager->persist($newRendezVous);
                 $entityManager->flush();
-                $response->setContent('Saved new commune with id ' . $newRendezVous->getId() );
+
+                    $icsController->createICSFile($data['dateStart'],$data['dateEnd'], $this->getUser()->getUsername(),$data["description"]);
+
+                    $mail = $ProspectId->getMail();
+                    $start  = date_format($newRendezVous->getDateStart(),'y-M-d  H:m:s');
+                    $end  = date_format($newRendezVous->getDateEnd(),'y-M-d  H:m:s');
+                    $description  = $newRendezVous->getDescription();
+
+                    $swiftmsg = new \Swift_Message('Prise de Rendez-Vous'.$start);
+                    $swiftmsg->setFrom("crmwebpartener@gmail.com");
+                    $swiftmsg->setTo($mail);
+                    $swiftmsg->setBody(
+                        $this->renderView('mail/mailRDVclient.html.twig', ['dateStart' => $start, 'dateEnd'=>$end,'description'=>$description]), 'text/html', 'utf-8')
+                        ->attach(\Swift_Attachment::fromPath('../public/tmp/meeting.ics'));
+
+                    $mailer->send($swiftmsg);
+                    $logger->info('email sent');
+                    $this->addFlash('notice', 'Email sent');
+                    $swiftmsg = new \Swift_Message('Rendez-Vous Client'.$start);
+                    $swiftmsg->setFrom("crmwebpartener@gmail.com");
+                    $swiftmsg->setTo($userIdHost->getEmail());
+                    $swiftmsg->setBody(
+                        $this->renderView('mail/mailRDVuser.html.twig', ['client' => $ProspectId->getNom(), 'dateStart' => $start, 'dateEnd'=>$end,'description'=>$description]), 'text/html', 'utf-8');
+
+                    $mailer->send($swiftmsg);
+                    $logger->info('email sent');
+                    $this->addFlash('notice', 'Email sent');
+                $response->setContent('Create rendez-vous with id ' . $newRendezVous->getId() );
                 }
 
             }
