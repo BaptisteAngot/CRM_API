@@ -67,7 +67,7 @@ class ProspectController extends AbstractController
         }
 
         $description = isset($data['description']) ? $data['description'] : null;
-        $status = isset($data['$status']) ? $data['$status'] : null;
+        $status = isset($data['status']) ? $data['status'] : null;
         if (!empty($errors)) {
             return new JsonResponse($errors, Response::HTTP_PARTIAL_CONTENT);
         }else {

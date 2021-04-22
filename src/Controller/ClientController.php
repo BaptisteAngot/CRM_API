@@ -55,7 +55,7 @@ class ClientController extends AbstractController
             if (empty($mail) || empty($nom) || empty($prenom)|| empty($fonction) || empty($telephone) || empty($rgpd)) {
                 throw new NotFoundHttpException('Expecting mandatory parameters!');
             } else {
-                $this->clientRepository->saveClient($mail, $nom, $prenom, $fonction, $telephone, $rgpd);
+                $this->clientRepository->saveClient($mail, $nom, $prenom, $fonction, $telephone, $rgpd, $this->getUser());
                 return new JsonResponse(['status' => 'Customer created!'], Response::HTTP_CREATED);
             } 
     
