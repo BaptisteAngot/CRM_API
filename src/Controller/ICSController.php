@@ -13,11 +13,8 @@ class ICSController extends AbstractController
      * @param $description
      * @param string $location
      */
-<<<<<<< HEAD
     public function createICSFile($meetingStart, $meetingEnd, $userName, $description, $location="24 PLACE ST MARC 76000 ROUEN") {
-=======
-    public function createICSFile($meetingStart, $meetingEnd, $userName, $description, $location="") {
->>>>>>> 52e385ea6af96fb753733f5950af34cdbc56f722
+
         $tmp = $_ENV['SERVER'];
         $fs = new Filesystem();
         $fileName = "meeting.ics";
