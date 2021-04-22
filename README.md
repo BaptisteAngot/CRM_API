@@ -38,11 +38,19 @@ Add JsonWebToken:
       JWT_SECRET_KEY=%kernel.project_dir%/config/jwt/private.pem
       JWT_PUBLIC_KEY=%kernel.project_dir%/config/jwt/public.pem
       JWT_PASSPHRASE=passphrase
+      
+ Configue Mailer with Gmail in your env.local:
  
- 
+    MAILER_URL=gmail://username:password@localhost
+  
+  the password is not the mail password. 
+  see your account configuration>sécurity Active your double Authentification
+  and add an appconnexion, you may have to disable a sécurity check
+  
+  
 start your server:
 
-  symfony server:start
+    symfony server:start
 
 Route:
 
@@ -92,9 +100,18 @@ Route:
 
 
 
-Create Fixture(add one User for each Role, add two Origine and one Prospect) with bundle fixture:
+Create Fixture  with bundle fixture:
     
     php bin/console doctrine:fixtures:load
+    
+   add 10 client
+       10 Entreprise
+       10 Origine
+       10 prospect
+       30 User
+       
+       
+   one User for each Role, add two Origine and one Prospect
     
  Create Users Admin:
     
